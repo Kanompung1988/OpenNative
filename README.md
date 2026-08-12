@@ -92,6 +92,63 @@ When non-English developers use AI coding agents (Claude Code, Codex CLI, Cursor
 
 ---
 
+## 🛠️ Machine Translation (MT) Setup
+
+OpenNative relies on **`scb10x/typhoon-translate-4b`** via **Ollama** for state-of-the-art Thai-English translation.
+
+### Step 1: Install Ollama
+Download and install Ollama from [ollama.ai](https://ollama.ai).
+
+### Step 2: Pull the Typhoon 4B Model
+Open PowerShell and run:
+```powershell
+ollama pull scb10x/typhoon-translate-4b
+```
+*(Model size: ~2.5 GB. Runs on any GPU or CPU with 4 GB+ RAM).*
+
+### Step 3: Run OpenNative
+OpenNative auto-detects local Ollama (`http://localhost:11434`) automatically:
+```
+✔ Local Machine Translation: [Ollama Typhoon 4B] (Local GPU/CPU)
+```
+*(If Ollama is not running, OpenNative falls back to `MockMTProvider` so it never crashes).*
+
+---
+
+## ⚡ PowerShell Integration & Claude CLI Wrapper
+
+Want to use OpenNative seamlessly with your existing `claude` or `codex` CLI in PowerShell?
+
+### Quick Wrapper Command
+```powershell
+# Wrap Claude Code CLI
+npx opennative claude --api-key sk-ant-xxx
+
+# Wrap DeepSeek V3 / R1
+npx opennative deepseek --api-key sk-xxx
+
+# Wrap Qwen 2.5 Coder
+npx opennative qwen --api-key sk-xxx
+```
+
+### Permanent PowerShell Alias (`claude`)
+
+Open your PowerShell profile:
+```powershell
+notepad $PROFILE
+```
+
+Add this function:
+```powershell
+function claude {
+    npx opennative claude $args
+}
+```
+
+Now whenever you run `claude` in PowerShell, OpenNative automatically protects code sentinels, translates your Thai prompt into English via local GPU/CPU, and streams Claude Code responses back to your terminal!
+
+---
+
 ## 📊 Token Tax Benchmark Results
 
 Empirical measurements comparing Thai prompts vs. their English translations across major LLM tokenizers:
@@ -104,8 +161,6 @@ Empirical measurements comparing Thai prompts vs. their English translations acr
 | 🇨🇳 **Qwen 2.5 Coder** | BPE (151k) | 38 | 15 | **2.53×** | 🔥 **60.5%** |
 | 🇺🇸 **GPT-4 (cl100k)** | Tiktoken (100k) | 39 | 20 | **1.95×** | 🟢 **48.7%** |
 | 🇺🇸 **GPT-4o (o200k)** | Tiktoken (200k) | 27 | 23 | **1.17×** | 🔵 **14.8%** |
-
-> **TL;DR**: If you're using DeepSeek or Qwen in Thai, you're paying **3× the tokens** for the same work. OpenNative cuts that down to English-level costs.
 
 ---
 
@@ -129,25 +184,16 @@ Empirical measurements comparing Thai prompts vs. their English translations acr
 | Package | Description |
 |:---|:---|
 | `@opennative/core-protector` | Masks code blocks, URLs, file paths, identifiers, CLI commands, and tech keywords with `__PH_n__` sentinels before MT. Restores them after translation with 100% fidelity. |
-| `@opennative/core-benchmark` | Measures token counts across OpenAI (o200k, cl100k), Qwen, DeepSeek, and Llama tokenizers. Generates comparative reports. |
-| `@opennative/core-mt` | Abstraction layer for local machine translation. Ships with `OllamaTyphoonProvider` (Typhoon 4B) and `MockMTProvider` for testing. |
-| `@opennative/core-transcript` | Enforces the Canonical English Transcript rule. Manages conversation history, token savings tracking, and shareable stats. |
-| `@opennative/core-providers` | Agent provider interface with implementations for Codex App-Server (JSON-RPC/stdio), Claude API (BYOK), and OpenAI-compatible endpoints (DeepSeek, Qwen). |
-| `@opennative/cli` | Interactive terminal gateway with real-time token savings meter, session stats, and multi-agent support. |
-| `opennative-vscode` | VS Code extension providing a Language Sidecar sidebar with translation input and live savings display. |
+| `@opennative/core-benchmark` | Measures token counts across OpenAI (o200k, cl100k), Qwen, DeepSeek, and Llama tokenizers. |
+| `@opennative/core-mt` | Local machine translation engine (`OllamaTyphoonProvider` with NDJSON streaming & `StreamSegmenter`). |
+| `@opennative/core-transcript` | Enforces the Canonical English Transcript rule. Manages conversation history & session stats. |
+| `@opennative/core-providers` | Real SSE streaming agent providers for Claude API, OpenAI-compatible (DeepSeek/Qwen), and Codex App-Server (JSON-RPC/stdio). |
+| `@opennative/cli` | Interactive CLI Gateway with shebang (`npx opennative`), flag parsing, and live streaming terminal UI. |
+| `opennative-vscode` | VS Code extension providing a Language Sidecar sidebar with real-time savings meter. |
 
 ---
 
 ## ⚙️ Quick Start
-
-### Prerequisites
-
-- **Node.js** v18+
-- **Ollama** (optional, for local translation):
-  ```bash
-  # Install Ollama from https://ollama.ai
-  ollama pull scb10x/typhoon-translate-4b
-  ```
 
 ### Install & Build
 
@@ -156,61 +202,32 @@ Empirical measurements comparing Thai prompts vs. their English translations acr
 git clone https://github.com/Kanompung1988/OpenNative.git
 cd OpenNative
 
-# Install dependencies
+# Install dependencies & build
 npm install
-
-# Build all packages
 npm run build
 ```
 
-### Run the Benchmark
-
-```bash
-npm run benchmark
-```
-
-Example output:
-```
-===============================================================
- 🚀 OPENNATIVE MULTI-TOKENIZER BENCHMARK REPORT
-===============================================================
-
-[Prompt #1]
-🇹🇭 TH: "ช่วย refactor ฟังก์ชัน handleSubmit ใน LoginForm.tsx..."
-🇺🇸 EN: "Please refactor the handleSubmit function in LoginForm.tsx..."
----------------------------------------------------------------
- Token Count (TH vs EN):
-  - GPT-4o (o200k_base):  27 -> 23 tokens (14.8% saved)
-  - Qwen 2.5 Coder:       38 -> 15 tokens (60.5% saved)
-  - DeepSeek V3 / R1:     85 -> 25 tokens (70.5% saved)
-```
-
-### Run Tests
-
-```bash
-npm test
-```
-
-### Launch the CLI
+### Launch the CLI Gateway
 
 ```bash
 # Start interactive terminal gateway
-npm run --workspace=@opennative/cli start
+npx opennative
 
-# Or specify an agent target
-npm run --workspace=@opennative/cli start -- codex    # Codex App-Server
-npm run --workspace=@opennative/cli start -- claude   # Claude API (BYOK)
-npm run --workspace=@opennative/cli start -- deepseek # DeepSeek V3
+# Specify an agent target and API key
+npx opennative --agent claude --api-key sk-ant-xxx
+npx opennative --agent deepseek --api-key sk-xxx
+npx opennative --agent qwen --api-key sk-xxx
 ```
 
-CLI Demo:
+CLI Demo Output:
 ```
 ===============================================================
  🌐 OPENNATIVE — Native Language Layer for AI Coding Agents
    Thai UX. English Tokens. Zero Translation LLM Tokens.
 ===============================================================
 
-✔ OpenNative Gateway active with Agent: [Codex-App-Server]
+✔ OpenNative Gateway active with Agent: [Claude-API-BYOK]
+✔ Local Machine Translation: [Ollama Typhoon 4B] (Local GPU/CPU)
 Commands: /stats (Show Savings), /clear (Reset Session), /exit (Quit)
 
 🇹🇭 You (Thai): ช่วยแก้ bug ใน authService.ts หน่อย
@@ -225,26 +242,22 @@ Commands: /stats (Show Savings), /clear (Reset Session), /exit (Quit)
    - Qwen 2.5 Coder: 28 TH -> 10 EN tokens (↓64.3% saved)
    - GPT-4o:         18 TH -> 15 EN tokens (↓16.7% saved)
    - Latency:        45 ms | MT Cost: $0.00
+
+🤖 Agent [Claude-API-BYOK] Output:
+Here is the fix for the bug in `authService.ts`...
 ```
 
 ---
 
-## 🔒 Code Protector
+## 🧩 VS Code Extension (Language Sidecar)
 
-The Code Protector engine ensures that **code never gets mistranslated**. It recognizes and masks:
-
-| Category | Examples |
-|:---|:---|
-| 📦 Code Blocks | `` ```ts const x = 1; ``` `` |
-| 🔗 URLs | `https://api.example.com/v1/auth` |
-| 📁 File Paths | `src/components/LoginForm.tsx` |
-| 🏷️ Identifiers | `handleSubmit`, `UserService.createUser` |
-| 💻 CLI Commands | `npm install`, `git commit -m "fix"` |
-| ⚙️ Tech Keywords | `useState`, `async`, `interface` |
-| 🔍 Stack Traces | `at Service.method (file.ts:12:34)` |
-| 📝 Git Diffs | `+ const x = 1` / `- const x = 2` |
-
-The protector guarantees: `restore(mask(x)) === x` — **lossless round-trip** for all protected content.
+```bash
+cd apps/vscode
+npx vsce package
+```
+Install the generated `.vsix` file in VS Code (`Extensions` -> `Install from VSIX...`).
+- Press `Ctrl+Shift+L` or `Alt+T` to trigger OpenNative input.
+- Use the **OpenNative Language Sidecar** sidebar panel for live token savings visualization.
 
 ---
 
@@ -256,42 +269,10 @@ The protector guarantees: `restore(mask(x)) === x` — **lossless round-trip** f
 - [x] **Phase 3** — Canonical English Transcript Engine
 - [x] **Phase 4** — Agent Provider Abstraction (Codex, Claude, DeepSeek)
 - [x] **Phase 5** — Interactive CLI Gateway
-- [ ] **Phase 6** — VS Code Extension (Language Sidecar)
-- [ ] **Phase 7** — Real Streaming Translation (SSE)
-- [ ] **Phase 8** — Multi-language Support (Japanese, Korean, Chinese, etc.)
-- [ ] **Phase 9** — Plugin System for Custom MT Providers
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Whether it's bug fixes, new language support, additional agent providers, or documentation improvements.
-
-```bash
-# Fork the repo
-git clone https://github.com/YOUR_USERNAME/OpenNative.git
-cd OpenNative
-
-# Install & build
-npm install
-npm run build
-
-# Run tests
-npm test
-
-# Make your changes and submit a PR!
-```
-
----
-
-## 📄 Research & Background
-
-This project is inspired by empirical research on the **Token Tax** phenomenon — the hidden cost of using non-Latin-script languages with modern LLM tokenizers. Key findings:
-
-- **BPE tokenizers without Thai vocabulary** (DeepSeek, Llama) fall back to byte-level encoding, consuming 3× more tokens per Thai character
-- **LLM reasoning quality** degrades measurably on non-English input (+4.5%–9.9% error rate on coding benchmarks)
-- **Local machine translation** (4B parameter models) achieves sufficient quality for code-context translation at zero marginal cost
-- **Code-aware masking** with sentinel tags eliminates the primary failure mode of MT in developer contexts
+- [x] **Phase 6** — VS Code Extension (Language Sidecar)
+- [x] **Phase 7** — Real Streaming Translation & Agent Response (SSE / NDJSON)
+- [ ] **Phase 8** — Multi-language Support (Japanese, Korean, Chinese, Vietnamese)
+- [ ] **Phase 9** — MCP Server Integration (`@opennative/mcp`) for Claude Code / Cursor
 
 ---
 
