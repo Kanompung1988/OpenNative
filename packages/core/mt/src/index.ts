@@ -42,6 +42,15 @@ export class StreamSegmenter {
   }
 }
 
+export async function isOllamaRunning(endpoint: string = 'http://localhost:11434'): Promise<boolean> {
+  try {
+    const res = await fetch(endpoint);
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 export class OllamaTyphoonProvider implements MTProvider {
   public name = 'Ollama-Typhoon-4B';
   private endpoint: string;
@@ -58,8 +67,23 @@ export class OllamaTyphoonProvider implements MTProvider {
   }
 
   public async translate(input: string, options: MTTranslateOptions): Promise<string> {
-    const maskResult: MaskResult = this.protector.mask(input);
+    try {
+      let fullText = '';
+      if (this.translateStream) {
+        for await (const chunk of this.translateStream(input, options)) {
+          fullText += chunk;
+        }
+        return fullText;
+      }
+      return new MockMTProvider().translate(input, options);
+    } catch (error) {
+      console.warn(`[OllamaTyphoonProvider] Fallback active: ${(error as Error).message}`);
+      return new MockMTProvider().translate(input, options);
+    }
+  }
 
+  public async *translateStream(input: string, options: MTTranslateOptions): AsyncIterable<string> {
+    const maskResult: MaskResult = this.protector.mask(input);
     const systemPrompt = `You are a professional software development translation engine. Translate the text from ${options.from} to ${options.to}.
 STRICT RULES:
 1. Preserve all __PH_0__, __PH_1__, etc. sentinel tags EXACTLY as written.
@@ -75,22 +99,62 @@ STRICT RULES:
             { role: 'system', content: systemPrompt },
             { role: 'user', content: maskResult.maskedText }
           ],
-          stream: false
+          stream: true
         })
       });
 
       if (!response.ok) {
         throw new Error(`Ollama HTTP ${response.status}: ${response.statusText}`);
       }
+      if (!response.body) throw new Error('No response body');
 
-      const data = (await response.json()) as { message?: { content?: string } };
-      const translatedMasked = data.message?.content?.trim() || maskResult.maskedText;
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      const segmenter = new StreamSegmenter();
 
-      const restoreResult = this.protector.restore(translatedMasked, maskResult.map);
-      return restoreResult.restoredText;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const data = JSON.parse(line);
+            if (data.message?.content) {
+              const sentences = segmenter.push(data.message.content);
+              for (const sentence of sentences) {
+                const restored = this.protector.restore(sentence, maskResult.map);
+                yield restored.restoredText;
+              }
+            }
+            if (data.done) {
+              const remaining = segmenter.flush();
+              if (remaining) {
+                const restored = this.protector.restore(remaining, maskResult.map);
+                yield restored.restoredText;
+              }
+              return;
+            }
+          } catch (e) {
+            // ignore malformed JSON for incomplete lines (though typically each line in Ollama is complete JSON)
+          }
+        }
+      }
+      
+      const remaining = segmenter.flush();
+      if (remaining) {
+        const restored = this.protector.restore(remaining, maskResult.map);
+        yield restored.restoredText;
+      }
     } catch (error) {
-      console.warn(`[OllamaTyphoonProvider] Fallback active: ${(error as Error).message}`);
-      return new MockMTProvider().translate(input, options);
+      console.warn(`[OllamaTyphoonProvider] Stream Fallback active: ${(error as Error).message}`);
+      const mockResult = await new MockMTProvider().translate(input, options);
+      yield mockResult;
     }
   }
 }

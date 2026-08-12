@@ -34,9 +34,15 @@ export class CodexAppServerProvider implements AgentProvider {
         stdio: ['pipe', 'pipe', 'inherit']
       });
 
-      this.process.stdout?.on('data', (chunk: Buffer) => {
-        const lines = chunk.toString().split('\n').filter(Boolean);
+      let buffer = '';
+      this.process.stdout?.on('data', (chunk: any) => {
+        buffer += chunk.toString();
+        const lines = buffer.split('\n');
+        // keep the last incomplete part in the buffer
+        buffer = lines.pop() || '';
+        
         for (const line of lines) {
+          if (!line.trim()) continue;
           try {
             const parsed = JSON.parse(line);
             if (parsed.id) {
@@ -134,17 +140,45 @@ export class ClaudeAPIProvider implements AgentProvider {
         body: JSON.stringify({
           model: this.model,
           max_tokens: 2048,
-          messages: [{ role: 'user', content: message }]
+          messages: [{ role: 'user', content: message }],
+          stream: true
         })
       });
 
-      const data = (await response.json()) as { content?: Array<{ text?: string }> };
-      const textOutput = data.content?.[0]?.text || 'No response';
+      if (!response.body) throw new Error('No response body');
 
-      yield {
-        type: 'text',
-        content: textOutput
-      };
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let currentEvent = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            currentEvent = line.substring('event: '.length).trim();
+          } else if (line.startsWith('data: ')) {
+            const dataStr = line.substring('data: '.length).trim();
+            if (!dataStr) continue;
+            
+            const data = JSON.parse(dataStr);
+            if (currentEvent === 'content_block_delta' && data.delta?.text) {
+              yield {
+                type: 'text',
+                content: data.delta.text
+              };
+            } else if (currentEvent === 'message_stop') {
+              return;
+            }
+          }
+        }
+      }
     } catch (error) {
       yield {
         type: 'text',
@@ -184,7 +218,7 @@ export class OpenAICompatibleProvider implements AgentProvider {
   public async *send(threadId: string, message: string): AsyncIterable<AgentEvent> {
     yield {
       type: 'text',
-      content: `[${this.name}] Received canonical English prompt: "${message}"`
+      content: `[${this.name}] Received canonical English prompt: "${message}"\n`
     };
 
     if (!this.apiKey && !this.baseUrl.includes('localhost')) {
@@ -204,17 +238,54 @@ export class OpenAICompatibleProvider implements AgentProvider {
         },
         body: JSON.stringify({
           model: this.model,
-          messages: [{ role: 'user', content: message }]
+          messages: [{ role: 'user', content: message }],
+          stream: true
         })
       });
 
-      const data = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
-      const textOutput = data.choices?.[0]?.message?.content || 'No response content';
+      if (!response.body) throw new Error('No response body');
 
-      yield {
-        type: 'text',
-        content: textOutput
-      };
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith('data: ')) continue;
+          
+          const dataStr = trimmed.substring('data: '.length).trim();
+          if (dataStr === '[DONE]') return;
+          
+          try {
+            const data = JSON.parse(dataStr);
+            const delta = data.choices?.[0]?.delta;
+            if (!delta) continue;
+
+            if (delta.reasoning_content) {
+              yield {
+                type: 'text',
+                content: delta.reasoning_content
+              };
+            }
+            if (delta.content) {
+              yield {
+                type: 'text',
+                content: delta.content
+              };
+            }
+          } catch (e) {
+            // ignore JSON parse errors for incomplete chunks
+          }
+        }
+      }
     } catch (error) {
       yield {
         type: 'text',

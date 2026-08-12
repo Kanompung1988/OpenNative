@@ -48,6 +48,7 @@
     }
   },
   "scripts": {
+    "vscode:prepublish": "npm run build",
     "build": "npx -p typescript tsc"
   },
   "dependencies": {
@@ -56,6 +57,10 @@
     "@opennative/core-protector": "*",
     "@opennative/core-providers": "*",
     "@opennative/core-transcript": "*"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@vscode/vsce": "^2.32.0"
   },
   "license": "MIT"
 }

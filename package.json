@@ -25,6 +25,7 @@
   "author": "OpenNative Team",
   "license": "MIT",
   "devDependencies": {
+    "@types/node": "^20.10.0",
     "typescript": "^5.7.0"
   }
 }

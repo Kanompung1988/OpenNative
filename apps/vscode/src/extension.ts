@@ -1,158 +1,294 @@
+import * as vscode from 'vscode';
 import { CodeProtector } from '@opennative/core-protector';
 import { TokenTaxBenchmark } from '@opennative/core-benchmark';
-import { MockMTProvider, OllamaTyphoonProvider } from '@opennative/core-mt';
+import { MockMTProvider } from '@opennative/core-mt';
 import { CanonicalTranscriptEngine } from '@opennative/core-transcript';
-import { AgentProvider, CodexAppServerProvider, ClaudeAPIProvider } from '@opennative/core-providers';
 
-export interface VSCodeExtensionContext {
-  subscriptions: Array<{ dispose(): any }>;
+export function activate(context: vscode.ExtensionContext) {
+  console.log('🌐 OpenNative extension activated in VS Code!');
+
+  const protector = new CodeProtector();
+  const benchmark = new TokenTaxBenchmark();
+  const mtProvider = new MockMTProvider();
+  const transcriptEngine = new CanonicalTranscriptEngine(mtProvider);
+
+  // Register Command
+  const askAgentCommand = vscode.commands.registerCommand('opennative.askAgent', async () => {
+    const editor = vscode.window.activeTextEditor;
+    let selectedText = '';
+    if (editor) {
+      const selection = editor.selection;
+      selectedText = editor.document.getText(selection);
+    }
+
+    const thaiPrompt = await vscode.window.showInputBox({
+      prompt: 'Enter your prompt in Thai',
+      placeHolder: 'อธิบายสิ่งที่คุณต้องการทำ...'
+    });
+
+    if (!thaiPrompt) {
+      return;
+    }
+
+    try {
+      const combinedPrompt = selectedText
+        ? `ช่วยแก้โค้ดต่อไปนี้:\n\`\`\`\n${selectedText}\n\`\`\`\n${thaiPrompt}`
+        : thaiPrompt;
+
+      const initialMetrics = benchmark.measure(combinedPrompt);
+      const turnResult = await transcriptEngine.processUserPrompt(
+        combinedPrompt,
+        initialMetrics.qwenTokens,
+        0
+      );
+
+      const postMetrics = benchmark.compare(combinedPrompt, turnResult.canonicalEnglish);
+      transcriptEngine.updateLastTurnTokens(postMetrics.translatedEnglish.qwenTokens);
+      const stats = transcriptEngine.getSessionStats();
+
+      // Show English result in output channel
+      const outputChannel = vscode.window.createOutputChannel('OpenNative');
+      outputChannel.show();
+      outputChannel.appendLine('===============================================================');
+      outputChannel.appendLine(' 🌐 OPENNATIVE CANONICAL PROMPT SPECIFICATION');
+      outputChannel.appendLine('===============================================================\n');
+      outputChannel.appendLine('🇹🇭 Original Thai Prompt:');
+      outputChannel.appendLine(`   "${combinedPrompt}"\n`);
+      outputChannel.appendLine('🇺🇸 Transmitted Canonical Prompt (EN):');
+      outputChannel.appendLine(`   "${turnResult.canonicalEnglish}"\n`);
+      outputChannel.appendLine('⚡ Real-time Token Savings:');
+      outputChannel.appendLine(`   - Qwen 2.5 Coder: ${postMetrics.originalThai.qwenTokens} TH -> ${postMetrics.translatedEnglish.qwenTokens} EN tokens (${postMetrics.savings.qwenPercent}% saved)`);
+      outputChannel.appendLine(`   - DeepSeek V3/R1: ${postMetrics.originalThai.deepseekTokens} TH -> ${postMetrics.translatedEnglish.deepseekTokens} EN tokens (${postMetrics.savings.deepseekPercent}% saved)`);
+      outputChannel.appendLine(`   - GPT-4o:         ${postMetrics.originalThai.o200kTokens} TH -> ${postMetrics.translatedEnglish.o200kTokens} EN tokens (${postMetrics.savings.o200kPercent}% saved)`);
+
+      // Show token savings notification
+      vscode.window.showInformationMessage(
+        `OpenNative: Saved ${postMetrics.originalThai.qwenTokens - postMetrics.translatedEnglish.qwenTokens} tokens (${postMetrics.savings.qwenPercent}% reduction)`
+      );
+
+    } catch (error: any) {
+      vscode.window.showErrorMessage(`OpenNative Error: ${error.message}`);
+    }
+  });
+
+  context.subscriptions.push(askAgentCommand);
+
+  // Register Sidebar Webview
+  const sidebarProvider = new OpenNativeSidebarProvider(context.extensionUri, benchmark, transcriptEngine);
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(
+      'opennative-sidebar-view',
+      sidebarProvider
+    )
+  );
 }
 
-/**
- * OpenNativeVSCodeExtension manages the Language Sidecar inside VS Code
- */
-export class OpenNativeVSCodeExtension {
-  private protector = new CodeProtector();
-  private benchmark = new TokenTaxBenchmark();
-  private engine = new CanonicalTranscriptEngine(new MockMTProvider());
-  private provider: AgentProvider = new CodexAppServerProvider();
+export function deactivate() {}
 
-  public activate(context: VSCodeExtensionContext) {
-    console.log('🌐 OpenNative Language Sidecar extension activated in VS Code!');
-  }
+class OpenNativeSidebarProvider implements vscode.WebviewViewProvider {
+  private _view?: vscode.WebviewView;
 
-  /**
-   * Handles Ctrl+Shift+L shortcut: Captures active editor selection & prompt
-   */
-  public async handleAskAgentCommand(selectedCode: string, thaiPrompt: string) {
-    const combinedPrompt = selectedCode
-      ? `ช่วยแก้โค้ดต่อไปนี้:\n\`\`\`\n${selectedCode}\n\`\`\`\n${thaiPrompt}`
-      : thaiPrompt;
+  constructor(
+    private readonly _extensionUri: vscode.Uri,
+    private readonly benchmark: TokenTaxBenchmark,
+    private readonly engine: CanonicalTranscriptEngine
+  ) {}
 
-    const initialMetrics = this.benchmark.measure(combinedPrompt);
-    const { canonicalEnglish, displayThai, latencyMs } = await this.engine.processUserPrompt(
-      combinedPrompt,
-      initialMetrics.qwenTokens,
-      0
-    );
+  public resolveWebviewView(
+    webviewView: vscode.WebviewView,
+    context: vscode.WebviewViewResolveContext,
+    _token: vscode.CancellationToken,
+  ) {
+    this._view = webviewView;
 
-    const metrics = this.benchmark.compare(combinedPrompt, canonicalEnglish);
-
-    return {
-      canonicalEnglish,
-      displayThai,
-      latencyMs,
-      savings: {
-        qwenPercent: metrics.savings.qwenPercent,
-        deepseekPercent: metrics.savings.deepseekPercent,
-        o200kPercent: metrics.savings.o200kPercent,
-        savedTokens: metrics.originalThai.qwenTokens - metrics.translatedEnglish.qwenTokens
-      },
-      stats: this.engine.getSessionStats()
+    webviewView.webview.options = {
+      enableScripts: true,
+      localResourceRoots: [this._extensionUri]
     };
+
+    webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+
+    webviewView.webview.onDidReceiveMessage(async (data: any) => {
+      switch (data.type) {
+        case 'translateAndSend': {
+          const thaiPrompt = data.value;
+          if (!thaiPrompt) return;
+
+          try {
+            const initialMetrics = this.benchmark.measure(thaiPrompt);
+            const turnResult = await this.engine.processUserPrompt(
+              thaiPrompt,
+              initialMetrics.qwenTokens,
+              0
+            );
+
+            const postMetrics = this.benchmark.compare(thaiPrompt, turnResult.canonicalEnglish);
+            this.engine.updateLastTurnTokens(postMetrics.translatedEnglish.qwenTokens);
+            const stats = this.engine.getSessionStats();
+
+            this._view?.webview.postMessage({
+              type: 'result',
+              value: {
+                canonicalEnglish: turnResult.canonicalEnglish,
+                savedTokens: postMetrics.originalThai.qwenTokens - postMetrics.translatedEnglish.qwenTokens,
+                savingPercentage: postMetrics.savings.qwenPercent,
+                stats
+              }
+            });
+          } catch (error: any) {
+            vscode.window.showErrorMessage(`Error: ${error.message}`);
+          }
+          break;
+        }
+      }
+    });
   }
 
-  /**
-   * Renders the OpenNative Sidebar Webview HTML UI
-   */
-  public getWebviewHtml(): string {
+  private _getHtmlForWebview(webview: vscode.Webview) {
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>OpenNative Language Gateway</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #1e1e2e;
-      color: #cdd6f4;
-      padding: 12px;
-      margin: 0;
-    }
-    .header {
-      font-size: 14px;
-      font-weight: bold;
-      color: #89b4fa;
-      margin-bottom: 8px;
-    }
-    .tagline {
-      font-size: 11px;
-      color: #a6adc8;
-      margin-bottom: 12px;
-    }
-    textarea {
-      width: 100%;
-      height: 80px;
-      background: #313244;
-      color: #f5e0dc;
-      border: 1px solid #45475a;
-      border-radius: 6px;
-      padding: 8px;
-      box-sizing: border-box;
-      font-size: 12px;
-    }
-    button {
-      width: 100%;
-      background: #89b4fa;
-      color: #11111b;
-      border: none;
-      padding: 8px;
-      margin-top: 8px;
-      font-weight: bold;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #b4befe;
-    }
-    .savings-card {
-      background: #181825;
-      border: 1px solid #313244;
-      border-radius: 6px;
-      padding: 10px;
-      margin-top: 12px;
-    }
-    .stat-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      margin-bottom: 4px;
-    }
-    .badge {
-      color: #a6e3a1;
-      font-weight: bold;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenNative Language Sidecar</title>
+    <style>
+        body {
+            font-family: var(--vscode-font-family);
+            background-color: var(--vscode-editor-background);
+            color: var(--vscode-editor-foreground);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        h2 {
+            font-size: 1.2em;
+            margin-bottom: 0;
+            color: var(--vscode-editor-foreground);
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            box-sizing: border-box;
+            background-color: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            border: 1px solid var(--vscode-input-border);
+            padding: 8px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        button {
+            background-color: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background-color: var(--vscode-button-hoverBackground);
+        }
+
+        .card {
+            background-color: var(--vscode-sideBar-background);
+            border: 1px solid var(--vscode-widget-border);
+            padding: 12px;
+            border-radius: 4px;
+        }
+
+        .card-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--vscode-editor-foreground);
+        }
+
+        .meter {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .result-box {
+            background-color: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-widget-border);
+            padding: 10px;
+            min-height: 50px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
 </head>
 <body>
-  <div class="header">🌐 OpenNative Language Sidecar</div>
-  <div class="tagline">Thai UX. English Tokens. Zero Translation Tokens.</div>
-  
-  <label for="prompt" style="font-size:11px;">🇹🇭 Ask Agent (Thai):</label>
-  <textarea id="prompt" placeholder="ช่วยแก้ login bug และเพิ่ม error handling หน่อย..."></textarea>
-  <button onclick="sendPrompt()">Send to Agent (Ctrl+Shift+L)</button>
+    <h2>🌐 OpenNative Language Sidecar</h2>
 
-  <div class="savings-card">
-    <div class="header" style="font-size:12px; color:#f9e2af;">⚡ LANGUAGE SAVINGS METER</div>
-    <div class="stat-row"><span>DeepSeek V3/R1:</span><span class="badge">↓ 55.0% saved</span></div>
-    <div class="stat-row"><span>Qwen 2.5 Coder:</span><span class="badge">↓ 48.6% saved</span></div>
-    <div class="stat-row"><span>GPT-4o:</span><span class="badge">↓ 22.1% saved</span></div>
-    <div class="stat-row"><span>Translation Cost:</span><span style="color:#a6e3a1;">$0.00 (Local MT)</span></div>
-  </div>
+    <div>
+        <label for="prompt">Thai Input Prompt</label>
+        <textarea id="prompt" placeholder="อธิบายสิ่งที่คุณต้องการ..."></textarea>
+        <button id="sendBtn" style="width: 100%; margin-top: 8px;">Send to Agent</button>
+    </div>
 
-  <script>
-    function sendPrompt() {
-      const val = document.getElementById('prompt').value;
-      if (val) {
-        alert('Prompt sent via OpenNative Canonical Layer!');
-      }
-    }
-  </script>
+    <div class="card" id="savingsCard" style="display: none;">
+        <div class="card-title">Real-time Savings Meter 🚀</div>
+        <div class="meter">
+            <span>Tokens Saved:</span>
+            <span id="tokensSaved" style="font-weight: bold; color: #a6e3a1;">0</span>
+        </div>
+        <div class="meter">
+            <span>Reduction:</span>
+            <span id="reduction" style="font-weight: bold; color: #a6e3a1;">0%</span>
+        </div>
+    </div>
+
+    <div class="card" id="outputCard" style="display: none;">
+        <div class="card-title">Canonical English Result</div>
+        <div id="output" class="result-box"></div>
+    </div>
+
+    <script>
+        const vscode = acquireVsCodeApi();
+
+        const sendBtn = document.getElementById('sendBtn');
+        const promptInput = document.getElementById('prompt');
+        const savingsCard = document.getElementById('savingsCard');
+        const outputCard = document.getElementById('outputCard');
+        const tokensSaved = document.getElementById('tokensSaved');
+        const reduction = document.getElementById('reduction');
+        const output = document.getElementById('output');
+
+        sendBtn.addEventListener('click', () => {
+            const text = promptInput.value.trim();
+            if (text) {
+                vscode.postMessage({
+                    type: 'translateAndSend',
+                    value: text
+                });
+                sendBtn.textContent = 'Processing...';
+                sendBtn.disabled = true;
+            }
+        });
+
+        window.addEventListener('message', event => {
+            const message = event.data;
+            switch (message.type) {
+                case 'result':
+                    sendBtn.textContent = 'Send to Agent';
+                    sendBtn.disabled = false;
+                    
+                    savingsCard.style.display = 'block';
+                    outputCard.style.display = 'block';
+                    
+                    tokensSaved.textContent = message.value.savedTokens;
+                    reduction.textContent = message.value.savingPercentage + '%';
+                    output.textContent = message.value.canonicalEnglish;
+                    break;
+            }
+        });
+    </script>
 </body>
 </html>`;
-  }
-
-  public deactivate() {
-    this.benchmark.free();
   }
 }

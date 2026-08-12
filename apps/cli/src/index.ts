@@ -1,6 +1,8 @@
+#!/usr/bin/env node
+
 import readline from 'readline';
 import { TokenTaxBenchmark } from '@opennative/core-benchmark';
-import { OllamaTyphoonProvider, MockMTProvider, MTProvider } from '@opennative/core-mt';
+import { OllamaTyphoonProvider, MockMTProvider, MTProvider, isOllamaRunning } from '@opennative/core-mt';
 import { CanonicalTranscriptEngine } from '@opennative/core-transcript';
 import { AgentProvider, CodexAppServerProvider, ClaudeAPIProvider, OpenAICompatibleProvider } from '@opennative/core-providers';
 
@@ -16,18 +18,51 @@ function printBanner() {
   console.log('\x1b[36m%s\x1b[0m', '===============================================================\n');
 }
 
+function parseArgs(args: string[]) {
+  const options: Record<string, string> = {};
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg.startsWith('--')) {
+      const key = arg.slice(2);
+      const next = args[i + 1];
+      if (next && !next.startsWith('--')) {
+        options[key] = next;
+        i++;
+      } else {
+        options[key] = 'true';
+      }
+    } else if (i === 0 && !arg.startsWith('-')) {
+      options.agent = arg;
+    }
+  }
+  return options;
+}
+
 async function main() {
   printBanner();
 
-  const args = process.argv.slice(2);
-  const targetAgentArg = (args[0] || 'codex').toLowerCase();
+  const args = parseArgs(process.argv.slice(2));
+  const targetAgent = (args.agent || args['target'] || 'codex').toLowerCase();
+  const apiKey = args['api-key'] || args['key'] || '';
+  const baseUrl = args['base-url'] || '';
+  const model = args['model'] || '';
 
   let agentProvider: AgentProvider;
 
-  if (targetAgentArg === 'claude') {
-    agentProvider = new ClaudeAPIProvider();
-  } else if (targetAgentArg === 'deepseek' || targetAgentArg === 'qwen') {
-    agentProvider = new OpenAICompatibleProvider('DeepSeek-V3');
+  if (targetAgent === 'claude') {
+    agentProvider = new ClaudeAPIProvider(apiKey || process.env.ANTHROPIC_API_KEY || '', model || 'claude-3-5-sonnet-20241022');
+  } else if (targetAgent === 'deepseek' || targetAgent === 'qwen' || targetAgent === 'openai') {
+    const providerName = targetAgent === 'qwen' ? 'Qwen-2.5-Coder' : 'DeepSeek-V3';
+    const defaultUrl = targetAgent === 'qwen' ? 'https://dashscope.aliyuncs.com/compatible-mode/v1' : 'https://api.deepseek.com/v1';
+    const defaultKey = targetAgent === 'qwen' ? process.env.DASHSCOPE_API_KEY : process.env.DEEPSEEK_API_KEY;
+    const defaultModel = targetAgent === 'qwen' ? 'qwen2.5-coder-7b-instruct' : 'deepseek-chat';
+
+    agentProvider = new OpenAICompatibleProvider(
+      providerName,
+      baseUrl || defaultUrl,
+      apiKey || defaultKey || '',
+      model || defaultModel
+    );
   } else {
     agentProvider = new CodexAppServerProvider();
   }
@@ -35,12 +70,20 @@ async function main() {
   await agentProvider.connect();
   const threadId = await agentProvider.createThread();
 
-  const mtProvider: MTProvider = new OllamaTyphoonProvider();
-  const benchmark = new TokenTaxBenchmark();
-  const engine = new CanonicalTranscriptEngine(mtProvider);
+  // Auto-detect local Ollama
+  const ollamaActive = await isOllamaRunning();
+  const mtProvider: MTProvider = ollamaActive ? new OllamaTyphoonProvider() : new MockMTProvider();
 
   console.log('\x1b[32m%s\x1b[0m', `✔ OpenNative Gateway active with Agent: [${agentProvider.name}]`);
+  if (ollamaActive) {
+    console.log('\x1b[32m%s\x1b[0m', `✔ Local Machine Translation: [Ollama Typhoon 4B] (Local GPU/CPU)`);
+  } else {
+    console.log('\x1b[33m%s\x1b[0m', `⚡ Local Machine Translation: [Mock Fallback] (Start Ollama for real local MT)`);
+  }
   console.log('\x1b[90m%s\x1b[0m', 'Commands: /stats (Show Savings), /clear (Reset Session), /exit (Quit)\n');
+
+  const benchmark = new TokenTaxBenchmark();
+  const engine = new CanonicalTranscriptEngine(mtProvider);
 
   const promptUser = () => {
     rl.question('\x1b[1m\x1b[34m🇹🇭 You (Thai):\x1b[0m ', async (thaiInput: string) => {
@@ -105,13 +148,21 @@ async function main() {
 
       // 3. Transmit to Agent Provider & stream response
       console.log(`\x1b[1m\x1b[36m🤖 Agent [${agentProvider.name}] Output:\x1b[0m`);
+      let agentAccumulated = '';
       for await (const event of agentProvider.send(threadId, turnResult.canonicalEnglish)) {
         if (event.type === 'text') {
-          const agentTurnResult = await engine.processAgentResponse(event.content);
-          console.log(`   "${agentTurnResult.displayThai}"`);
+          agentAccumulated += event.content;
+          process.stdout.write(event.content);
         } else if (event.type === 'diff' || event.type === 'code') {
           console.log(`\n\x1b[35m[${event.type.toUpperCase()}]\x1b[0m\n${event.content}\n`);
         }
+      }
+      process.stdout.write('\n');
+
+      if (agentAccumulated) {
+        const agentTurnResult = await engine.processAgentResponse(agentAccumulated);
+        console.log(`\n\x1b[1m\x1b[34m🇹🇭 Thai UI Render:\x1b[0m`);
+        console.log(`   "${agentTurnResult.displayThai}"`);
       }
 
       console.log('\n\x1b[90m%s\x1b[0m', '---------------------------------------------------------------');

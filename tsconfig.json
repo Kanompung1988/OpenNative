@@ -12,11 +12,11 @@
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
     "paths": {
-      "@opennative/core-protector": ["./packages/core/protector/src/index.ts"],
-      "@opennative/core-benchmark": ["./packages/core/benchmark/src/index.ts"],
-      "@opennative/core-mt": ["./packages/core/mt/src/index.ts"],
-      "@opennative/core-transcript": ["./packages/core/transcript/src/index.ts"],
-      "@opennative/core-providers": ["./packages/core/providers/src/index.ts"]
+      "@opennative/core-protector": ["./packages/core/protector/dist/index.d.ts", "./packages/core/protector/src/index.ts"],
+      "@opennative/core-benchmark": ["./packages/core/benchmark/dist/index.d.ts", "./packages/core/benchmark/src/index.ts"],
+      "@opennative/core-mt": ["./packages/core/mt/dist/index.d.ts", "./packages/core/mt/src/index.ts"],
+      "@opennative/core-transcript": ["./packages/core/transcript/dist/index.d.ts", "./packages/core/transcript/src/index.ts"],
+      "@opennative/core-providers": ["./packages/core/providers/dist/index.d.ts", "./packages/core/providers/src/index.ts"]
     }
   }
 }
