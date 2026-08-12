@@ -15,7 +15,7 @@
 
 <p align="center">
   <strong>~60%–73% fewer tokens &middot; ~65% cheaper &middot; ~30% faster reasoning &middot; 100% code safe</strong><br>
-  <sub>Measured on real-world coding benchmarks across Thai 🇹🇭, Japanese 🇯🇵, Chinese 🇨🇳, and Spanish 🇪🇸 prompts against DeepSeek V3, Qwen 2.5 Coder, Llama 3.3, and GPT-4o baselines.</sub>
+  <sub>Measured on real-world coding benchmarks across top LLM models tracked on Artificial Analysis (Claude 3.5/3.7, Gemini 2.0, DeepSeek V3/R1, Qwen 2.5, Llama 3.3, GPT-4o).</sub>
 </p>
 
 ---
@@ -40,20 +40,22 @@ Your agent receives **85 raw Thai tokens**, suffers byte-pair encoding inflation
 
 ---
 
-## 📊 Numbers & Token Tax Benchmark
+## 📊 Artificial Analysis Top LLM Leaderboard Benchmark
 
 <p align="center">
-  <img src="assets/benchmark-token-tax.png" width="860" alt="Matplotlib Token Tax Reduction Benchmark Chart across Models">
+  <img src="assets/benchmark-token-tax.png" width="860" alt="Artificial Analysis Top LLM Token Tax Reduction Benchmark Chart">
 </p>
 
-| vs Bare Prompt Baseline | Thai Tokens | English Tokens | Tax Ratio Eliminated | Token Savings | Cost Cut |
-|:---|---:|---:|:---:|:---:|:---:|
-| **GLM-4 / MiniMax** | 90 | 24 | **3.75×** | **-73.3%** | **-73%** |
-| **DeepSeek V3 / R1** | 85 | 25 | **3.40×** | **-70.5%** | **-70%** |
-| **Meta Llama 3.3** | 78 | 25 | **3.12×** | **-67.9%** | **-68%** |
-| **Qwen 2.5 Coder** | 38 | 15 | **2.53×** | **-60.5%** | **-60%** |
-| **GPT-4 (cl100k)** | 39 | 20 | **1.95×** | **-48.7%** | **-49%** |
-| **GPT-4o (o200k)** | 27 | 23 | **1.17×** | **-14.8%** | **-15%** |
+| Model Family (Artificial Analysis) | Thai Tokens | English Tokens | Tax Ratio Eliminated | Token Savings |
+|:---|---:|---:|:---:|:---:|
+| **OpenAI GPT-4 (cl100k)** | 77 | 25 | **3.08×** | **-59.4%** |
+| **GLM-4 / MiniMax 01** | 95 | 28 | **3.39×** | **-57.9%** |
+| **DeepSeek V3 / R1** | 85 | 27 | **3.15×** | **-55.0%** |
+| **Meta Llama 3.3 70B** | 79 | 27 | **2.92×** | **-52.0%** |
+| **Anthropic Claude 3.5 / 3.7** | 70 | 25 | **2.80×** | **-49.3%** |
+| **Qwen 2.5 Coder 32B/72B** | 73 | 27 | **2.70×** | **-48.6%** |
+| **Google Gemini 2.0 Flash/Pro** | 65 | 24 | **2.71×** | **-48.0%** |
+| **OpenAI GPT-4o (o200k)** | 39 | 25 | **1.56×** | **-22.1%** |
 
 ---
 

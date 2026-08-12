@@ -25,18 +25,14 @@ const DATASET = [
 ];
 
 function run() {
-  console.log('===============================================================');
-  console.log(' 🚀 OPENNATIVE (Phase 0) MULTI-TOKENIZER BENCHMARK REPORT ');
-  console.log('===============================================================\n');
+  console.log('================================================================================');
+  console.log(' 🚀 OPENNATIVE MULTI-TOKENIZER BENCHMARK (Artificial Analysis Top Models Suite)');
+  console.log('================================================================================\n');
 
   const benchmark = new TokenTaxBenchmark();
   const protector = new CodeProtector();
 
-  let sumSaveO200k = 0;
-  let sumSaveCl100k = 0;
-  let sumSaveQwen = 0;
-  let sumSaveDeepSeek = 0;
-  let sumSaveLlama = 0;
+  let sumO200k = 0, sumCl100k = 0, sumQwen = 0, sumDeepSeek = 0, sumLlama = 0, sumClaude = 0, sumGemini = 0, sumGlm = 0;
 
   DATASET.forEach((item, index) => {
     const { maskedText } = protector.mask(item.th);
@@ -46,32 +42,41 @@ function run() {
     console.log(`🇹🇭 TH: "${item.th}"`);
     console.log(`🇺🇸 EN: "${item.en}"`);
     console.log(`🔒 Masked: "${maskedText}"`);
-    console.log('---------------------------------------------------------------');
+    console.log('--------------------------------------------------------------------------------');
     console.log(` Token Count (TH vs EN):`);
-    console.log(`  - GPT-4o (o200k_base):  ${result.originalThai.o200kTokens} -> ${result.translatedEnglish.o200kTokens} tokens (${result.savings.o200kPercent}% saved)`);
-    console.log(`  - GPT-4 (cl100k_base):  ${result.originalThai.cl100kTokens} -> ${result.translatedEnglish.cl100kTokens} tokens (${result.savings.cl100kPercent}% saved)`);
-    console.log(`  - Qwen 2.5 Coder:       ${result.originalThai.qwenTokens} -> ${result.translatedEnglish.qwenTokens} tokens (${result.savings.qwenPercent}% saved)`);
-    console.log(`  - DeepSeek V3 / R1:     ${result.originalThai.deepseekTokens} -> ${result.translatedEnglish.deepseekTokens} tokens (${result.savings.deepseekPercent}% saved)`);
-    console.log(`  - Llama 3.3:            ${result.originalThai.llamaTokens} -> ${result.translatedEnglish.llamaTokens} tokens (${result.savings.llamaPercent}% saved)`);
+    console.log(`  - Anthropic Claude 3.5 / 3.7: ${result.originalThai.claudeTokens} -> ${result.translatedEnglish.claudeTokens} tokens (${result.savings.claudePercent}% saved)`);
+    console.log(`  - Google Gemini 2.0 Flash/Pro: ${result.originalThai.geminiTokens} -> ${result.translatedEnglish.geminiTokens} tokens (${result.savings.geminiPercent}% saved)`);
+    console.log(`  - DeepSeek V3 / R1:            ${result.originalThai.deepseekTokens} -> ${result.translatedEnglish.deepseekTokens} tokens (${result.savings.deepseekPercent}% saved)`);
+    console.log(`  - Qwen 2.5 Coder 32B/72B:      ${result.originalThai.qwenTokens} -> ${result.translatedEnglish.qwenTokens} tokens (${result.savings.qwenPercent}% saved)`);
+    console.log(`  - Meta Llama 3.3 70B:          ${result.originalThai.llamaTokens} -> ${result.translatedEnglish.llamaTokens} tokens (${result.savings.llamaPercent}% saved)`);
+    console.log(`  - GLM-4 / MiniMax 01:           ${result.originalThai.glmTokens} -> ${result.translatedEnglish.glmTokens} tokens (${result.savings.glmPercent}% saved)`);
+    console.log(`  - OpenAI GPT-4o (o200k_base):  ${result.originalThai.o200kTokens} -> ${result.translatedEnglish.o200kTokens} tokens (${result.savings.o200kPercent}% saved)`);
+    console.log(`  - OpenAI GPT-4 (cl100k_base):  ${result.originalThai.cl100kTokens} -> ${result.translatedEnglish.cl100kTokens} tokens (${result.savings.cl100kPercent}% saved)`);
     console.log('\n');
 
-    sumSaveO200k += result.savings.o200kPercent;
-    sumSaveCl100k += result.savings.cl100kPercent;
-    sumSaveQwen += result.savings.qwenPercent;
-    sumSaveDeepSeek += result.savings.deepseekPercent;
-    sumSaveLlama += result.savings.llamaPercent;
+    sumClaude += result.savings.claudePercent;
+    sumGemini += result.savings.geminiPercent;
+    sumDeepSeek += result.savings.deepseekPercent;
+    sumQwen += result.savings.qwenPercent;
+    sumLlama += result.savings.llamaPercent;
+    sumGlm += result.savings.glmPercent;
+    sumO200k += result.savings.o200kPercent;
+    sumCl100k += result.savings.cl100kPercent;
   });
 
   const count = DATASET.length;
-  console.log('===============================================================');
-  console.log(' 📊 AVERAGE TOKEN SAVINGS SUMMARY ACROSS MODELS');
-  console.log('===============================================================');
-  console.log(` 🔹 OpenAI GPT-4o (o200k_base):  ${(sumSaveO200k / count).toFixed(1)}% Token Savings`);
-  console.log(` 🔹 OpenAI GPT-4  (cl100k_base): ${(sumSaveCl100k / count).toFixed(1)}% Token Savings`);
-  console.log(` 🔹 Qwen 2.5 Coder:              ${(sumSaveQwen / count).toFixed(1)}% Token Savings`);
-  console.log(` 🔹 DeepSeek V3 / R1:            ${(sumSaveDeepSeek / count).toFixed(1)}% Token Savings`);
-  console.log(` 🔹 Meta Llama 3.3:              ${(sumSaveLlama / count).toFixed(1)}% Token Savings`);
-  console.log('===============================================================\n');
+  console.log('================================================================================');
+  console.log(' 📊 AVERAGE TOKEN SAVINGS SUMMARY (Artificial Analysis Top Models)');
+  console.log('================================================================================');
+  console.log(` 🔹 Anthropic Claude 3.5 / 3.7: ${(sumClaude / count).toFixed(1)}% Token Savings`);
+  console.log(` 🔹 Google Gemini 2.0 Flash/Pro: ${(sumGemini / count).toFixed(1)}% Token Savings`);
+  console.log(` 🔹 DeepSeek V3 / R1:            ${(sumDeepSeek / count).toFixed(1)}% Token Savings`);
+  console.log(` 🔹 Qwen 2.5 Coder 32B / 72B:    ${(sumQwen / count).toFixed(1)}% Token Savings`);
+  console.log(` 🔹 Meta Llama 3.3 70B:          ${(sumLlama / count).toFixed(1)}% Token Savings`);
+  console.log(` 🔹 GLM-4 / MiniMax 01:          ${(sumGlm / count).toFixed(1)}% Token Savings`);
+  console.log(` 🔹 OpenAI GPT-4o (o200k_base):  ${(sumO200k / count).toFixed(1)}% Token Savings`);
+  console.log(` 🔹 OpenAI GPT-4 (cl100k_base):  ${(sumCl100k / count).toFixed(1)}% Token Savings`);
+  console.log('================================================================================\n');
 
   benchmark.free();
 }

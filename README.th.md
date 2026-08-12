@@ -33,20 +33,22 @@
 
 ---
 
-## 📊 ตารางสถิติและกราฟเปรียบเทียบ (Matplotlib Chart)
+## 📊 ตารางสถิติเปรียบเทียบโมเดลชั้นนำบน Artificial Analysis Leaderboard
 
 <p align="center">
-  <img src="assets/benchmark-token-tax.png" width="860" alt="Matplotlib Token Tax Reduction Benchmark Chart">
+  <img src="assets/benchmark-token-tax.png" width="860" alt="Artificial Analysis Top LLM Token Tax Reduction Benchmark Chart">
 </p>
 
-| โมเดล / Tokenizer | Token ภาษาไทย | Token อังกฤษ | Tax Ratio ที่กำจัดได้ | **เปอร์เซ็นต์ประหยัด** |
+| โมเดลระดับโลก (Artificial Analysis) | Token ภาษาไทย | Token อังกฤษ | Tax Ratio ที่กำจัดได้ | **เปอร์เซ็นต์ประหยัด** |
 |:---|---:|---:|:---:|:---:|
-| 🇨🇳 **GLM-4 / MiniMax** | 90 | 24 | **3.75×** | ⚡ **73.3%** |
-| 🇨🇳 **DeepSeek V3 / R1** | 85 | 25 | **3.40×** | ⚡ **70.5%** |
-| 🦙 **Meta Llama 3.3** | 78 | 25 | **3.12×** | ⚡ **67.9%** |
-| 🇨🇳 **Qwen 2.5 Coder** | 38 | 15 | **2.53×** | 🔥 **60.5%** |
-| 🇺🇸 **GPT-4 (cl100k)** | 39 | 20 | **1.95×** | 🟢 **48.7%** |
-| 🇺🇸 **GPT-4o (o200k)** | 27 | 23 | **1.17×** | 🔵 **14.8%** |
+| 🇺🇸 **OpenAI GPT-4 (cl100k)** | 77 | 25 | **3.08×** | ⚡ **59.4%** |
+| 🇨🇳 **GLM-4 / MiniMax 01** | 95 | 28 | **3.39×** | ⚡ **57.9%** |
+| 🇨🇳 **DeepSeek V3 / R1** | 85 | 27 | **3.15×** | ⚡ **55.0%** |
+| 🦙 **Meta Llama 3.3 70B** | 79 | 27 | **2.92×** | ⚡ **52.0%** |
+| 🇺🇸 **Anthropic Claude 3.5 / 3.7** | 70 | 25 | **2.80×** | 🟢 **49.3%** |
+| 🇨🇳 **Qwen 2.5 Coder 32B/72B** | 73 | 27 | **2.70×** | 🔥 **48.6%** |
+| 🇺🇸 **Google Gemini 2.0 Flash/Pro** | 65 | 24 | **2.71×** | 🟢 **48.0%** |
+| 🇺🇸 **OpenAI GPT-4o (o200k)** | 39 | 25 | **1.56×** | 🔵 **22.1%** |
 
 ---
 

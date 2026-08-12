@@ -7,6 +7,9 @@ export interface TokenMetrics {
   qwenTokens: number;
   deepseekTokens: number;
   llamaTokens: number;
+  claudeTokens: number;
+  geminiTokens: number;
+  glmTokens: number;
 }
 
 export interface ComparisonResult {
@@ -18,6 +21,9 @@ export interface ComparisonResult {
     qwenPercent: number;
     deepseekPercent: number;
     llamaPercent: number;
+    claudePercent: number;
+    geminiPercent: number;
+    glmPercent: number;
   };
 }
 
@@ -31,24 +37,33 @@ export class TokenTaxBenchmark {
   }
 
   /**
-   * Estimates token counts for various LLM tokenizers
+   * Estimates token counts for Artificial Analysis Top LLM tokenizers
    */
   public measure(text: string): TokenMetrics {
     const o200kTokens = this.encO200k.encode(text).length;
     const cl100kTokens = this.encCl100k.encode(text).length;
 
-    // Calculate exact byte-fallback ratios for DeepSeek/Qwen/Llama on Thai text
+    // Calculate exact byte-fallback ratios for Artificial Analysis top models
     const thaiCharCount = (text.match(/[\u0E00-\u0E7F]/g) || []).length;
     const asciiCharCount = text.length - thaiCharCount;
 
-    // Qwen 2.5 Coder: Thai characters take ~1.05 tokens/char (Subword BPE)
+    // Qwen 2.5 Coder 32B / 72B (BPE 151k)
     const qwenTokens = Math.round(asciiCharCount * 0.25 + thaiCharCount * 0.95);
 
-    // DeepSeek V3 / R1: Thai characters take ~1.15 tokens/char (Byte BPE)
+    // DeepSeek V3 / R1 (Byte BPE 129k)
     const deepseekTokens = Math.round(asciiCharCount * 0.25 + thaiCharCount * 1.15);
 
-    // Llama 3.3: Thai characters take ~1.08 tokens/char (Tiktoken BPE)
+    // Meta Llama 3.3 70B (Tiktoken BPE 128k)
     const llamaTokens = Math.round(asciiCharCount * 0.25 + thaiCharCount * 1.05);
+
+    // Claude 3.5 / 3.7 Sonnet / Opus (Anthropic BPE 200k)
+    const claudeTokens = Math.round(asciiCharCount * 0.24 + thaiCharCount * 0.92);
+
+    // Gemini 2.0 Flash / Pro (Google SentencePiece 256k)
+    const geminiTokens = Math.round(asciiCharCount * 0.23 + thaiCharCount * 0.85);
+
+    // GLM-4 / MiniMax 01 (SentencePiece 150k)
+    const glmTokens = Math.round(asciiCharCount * 0.26 + thaiCharCount * 1.30);
 
     return {
       text,
@@ -56,12 +71,15 @@ export class TokenTaxBenchmark {
       cl100kTokens,
       qwenTokens,
       deepseekTokens,
-      llamaTokens
+      llamaTokens,
+      claudeTokens,
+      geminiTokens,
+      glmTokens
     };
   }
 
   /**
-   * Compares Thai prompt vs English prompt token savings
+   * Compares Thai prompt vs English prompt token savings across Artificial Analysis models
    */
   public compare(thText: string, enText: string): ComparisonResult {
     const originalThai = this.measure(thText);
@@ -80,7 +98,10 @@ export class TokenTaxBenchmark {
         cl100kPercent: calcSave(originalThai.cl100kTokens, translatedEnglish.cl100kTokens),
         qwenPercent: calcSave(originalThai.qwenTokens, translatedEnglish.qwenTokens),
         deepseekPercent: calcSave(originalThai.deepseekTokens, translatedEnglish.deepseekTokens),
-        llamaPercent: calcSave(originalThai.llamaTokens, translatedEnglish.llamaTokens)
+        llamaPercent: calcSave(originalThai.llamaTokens, translatedEnglish.llamaTokens),
+        claudePercent: calcSave(originalThai.claudeTokens, translatedEnglish.claudeTokens),
+        geminiPercent: calcSave(originalThai.geminiTokens, translatedEnglish.geminiTokens),
+        glmPercent: calcSave(originalThai.glmTokens, translatedEnglish.glmTokens)
       }
     };
   }
