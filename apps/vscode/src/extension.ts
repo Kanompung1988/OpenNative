@@ -1,34 +1,25 @@
 import * as vscode from 'vscode';
 import { CodeProtector } from '@opennative/core-protector';
 import { TokenTaxBenchmark } from '@opennative/core-benchmark';
-import { MockMTProvider } from '@opennative/core-mt';
 import { CanonicalTranscriptEngine } from '@opennative/core-transcript';
+import { MockMTProvider } from '@opennative/core-mt';
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log('🌐 OpenNative extension activated in VS Code!');
-
   const protector = new CodeProtector();
   const benchmark = new TokenTaxBenchmark();
-  const mtProvider = new MockMTProvider();
-  const transcriptEngine = new CanonicalTranscriptEngine(mtProvider);
+  const transcriptEngine = new CanonicalTranscriptEngine(new MockMTProvider());
 
-  // Register Command
+  // Command: opennative.askAgent
   const askAgentCommand = vscode.commands.registerCommand('opennative.askAgent', async () => {
     const editor = vscode.window.activeTextEditor;
-    let selectedText = '';
-    if (editor) {
-      const selection = editor.selection;
-      selectedText = editor.document.getText(selection);
-    }
+    const selectedText = editor ? editor.document.getText(editor.selection) : '';
 
     const thaiPrompt = await vscode.window.showInputBox({
-      prompt: 'Enter your prompt in Thai',
-      placeHolder: 'อธิบายสิ่งที่คุณต้องการทำ...'
+      prompt: 'Type your instruction in your native language (e.g. Thai 🇹🇭)',
+      placeHolder: 'e.g. ช่วย refactor ฟังก์ชันนี้ให้ใช้ react-hook-form หน่อย'
     });
 
-    if (!thaiPrompt) {
-      return;
-    }
+    if (!thaiPrompt) return;
 
     try {
       const combinedPrompt = selectedText
@@ -38,12 +29,12 @@ export function activate(context: vscode.ExtensionContext) {
       const initialMetrics = benchmark.measure(combinedPrompt);
       const turnResult = await transcriptEngine.processUserPrompt(
         combinedPrompt,
-        initialMetrics.qwenTokens,
+        initialMetrics.claudeOpus5Tokens,
         0
       );
 
       const postMetrics = benchmark.compare(combinedPrompt, turnResult.canonicalEnglish);
-      transcriptEngine.updateLastTurnTokens(postMetrics.translatedEnglish.qwenTokens);
+      transcriptEngine.updateLastTurnTokens(postMetrics.translatedEnglish.claudeOpus5Tokens);
       const stats = transcriptEngine.getSessionStats();
 
       // Show English result in output channel
@@ -57,13 +48,13 @@ export function activate(context: vscode.ExtensionContext) {
       outputChannel.appendLine('🇺🇸 Transmitted Canonical Prompt (EN):');
       outputChannel.appendLine(`   "${turnResult.canonicalEnglish}"\n`);
       outputChannel.appendLine('⚡ Real-time Token Savings:');
-      outputChannel.appendLine(`   - Qwen 2.5 Coder: ${postMetrics.originalThai.qwenTokens} TH -> ${postMetrics.translatedEnglish.qwenTokens} EN tokens (${postMetrics.savings.qwenPercent}% saved)`);
-      outputChannel.appendLine(`   - DeepSeek V3/R1: ${postMetrics.originalThai.deepseekTokens} TH -> ${postMetrics.translatedEnglish.deepseekTokens} EN tokens (${postMetrics.savings.deepseekPercent}% saved)`);
-      outputChannel.appendLine(`   - GPT-4o:         ${postMetrics.originalThai.o200kTokens} TH -> ${postMetrics.translatedEnglish.o200kTokens} EN tokens (${postMetrics.savings.o200kPercent}% saved)`);
+      outputChannel.appendLine(`   - Claude Opus 5: ${postMetrics.originalThai.claudeOpus5Tokens} TH -> ${postMetrics.translatedEnglish.claudeOpus5Tokens} EN tokens (${postMetrics.savings.claudeOpus5Percent}% saved)`);
+      outputChannel.appendLine(`   - DeepSeek V4:   ${postMetrics.originalThai.deepseekV4Tokens} TH -> ${postMetrics.translatedEnglish.deepseekV4Tokens} EN tokens (${postMetrics.savings.deepseekV4Percent}% saved)`);
+      outputChannel.appendLine(`   - GPT-5.6 Sol:   ${postMetrics.originalThai.gpt56SolTokens} TH -> ${postMetrics.translatedEnglish.gpt56SolTokens} EN tokens (${postMetrics.savings.gpt56SolPercent}% saved)`);
 
       // Show token savings notification
       vscode.window.showInformationMessage(
-        `OpenNative: Saved ${postMetrics.originalThai.qwenTokens - postMetrics.translatedEnglish.qwenTokens} tokens (${postMetrics.savings.qwenPercent}% reduction)`
+        `OpenNative: Saved ${postMetrics.originalThai.claudeOpus5Tokens - postMetrics.translatedEnglish.claudeOpus5Tokens} tokens (${postMetrics.savings.claudeOpus5Percent}% reduction)`
       );
 
     } catch (error: any) {
@@ -118,20 +109,20 @@ class OpenNativeSidebarProvider implements vscode.WebviewViewProvider {
             const initialMetrics = this.benchmark.measure(thaiPrompt);
             const turnResult = await this.engine.processUserPrompt(
               thaiPrompt,
-              initialMetrics.qwenTokens,
+              initialMetrics.claudeOpus5Tokens,
               0
             );
 
             const postMetrics = this.benchmark.compare(thaiPrompt, turnResult.canonicalEnglish);
-            this.engine.updateLastTurnTokens(postMetrics.translatedEnglish.qwenTokens);
+            this.engine.updateLastTurnTokens(postMetrics.translatedEnglish.claudeOpus5Tokens);
             const stats = this.engine.getSessionStats();
 
             this._view?.webview.postMessage({
               type: 'result',
               value: {
                 canonicalEnglish: turnResult.canonicalEnglish,
-                savedTokens: postMetrics.originalThai.qwenTokens - postMetrics.translatedEnglish.qwenTokens,
-                savingPercentage: postMetrics.savings.qwenPercent,
+                savedTokens: postMetrics.originalThai.claudeOpus5Tokens - postMetrics.translatedEnglish.claudeOpus5Tokens,
+                savingPercentage: postMetrics.savings.claudeOpus5Percent,
                 stats
               }
             });

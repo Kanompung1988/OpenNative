@@ -1,149 +1,119 @@
 #!/usr/bin/env node
 
 import readline from 'readline';
+import { CodeProtector } from '@opennative/core-protector';
 import { TokenTaxBenchmark } from '@opennative/core-benchmark';
-import { OllamaTyphoonProvider, MockMTProvider, MTProvider, isOllamaRunning } from '@opennative/core-mt';
 import { CanonicalTranscriptEngine } from '@opennative/core-transcript';
-import { AgentProvider, CodexAppServerProvider, ClaudeAPIProvider, OpenAICompatibleProvider } from '@opennative/core-providers';
+import { OllamaTyphoonProvider, MockMTProvider, isOllamaRunning } from '@opennative/core-mt';
+import { ClaudeAPIProvider, OpenAICompatibleProvider, CodexAppServerProvider, AgentProvider } from '@opennative/core-providers';
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
-
-function printBanner() {
-  console.log('\x1b[36m%s\x1b[0m', '===============================================================');
-  console.log('\x1b[1m\x1b[33m%s\x1b[0m', ' 🌐 OPENNATIVE — Native Language Layer for AI Coding Agents ');
-  console.log('\x1b[36m%s\x1b[0m', '   Thai UX. English Tokens. Zero Translation LLM Tokens.');
-  console.log('\x1b[36m%s\x1b[0m', '===============================================================\n');
+interface CLIArgs {
+  agent: 'claude' | 'deepseek' | 'qwen' | 'codex';
+  apiKey?: string;
+  baseUrl?: string;
+  model?: string;
 }
 
-function parseArgs(args: string[]) {
-  const options: Record<string, string> = {};
+function parseArgs(args: string[]): CLIArgs {
+  const result: CLIArgs = { agent: 'claude' };
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (arg.startsWith('--')) {
-      const key = arg.slice(2);
-      const next = args[i + 1];
-      if (next && !next.startsWith('--')) {
-        options[key] = next;
-        i++;
-      } else {
-        options[key] = 'true';
+    if (arg === '--agent' && args[i + 1]) {
+      result.agent = args[i + 1] as any;
+      i++;
+    } else if (arg === '--api-key' && args[i + 1]) {
+      result.apiKey = args[i + 1];
+      i++;
+    } else if (arg === '--base-url' && args[i + 1]) {
+      result.baseUrl = args[i + 1];
+      i++;
+    } else if (arg === '--model' && args[i + 1]) {
+      result.model = args[i + 1];
+      i++;
+    } else if (!arg.startsWith('-') && i === 0) {
+      if (['claude', 'deepseek', 'qwen', 'codex'].includes(arg)) {
+        result.agent = arg as any;
       }
-    } else if (i === 0 && !arg.startsWith('-')) {
-      options.agent = arg;
     }
   }
-  return options;
+  return result;
 }
 
 async function main() {
-  printBanner();
-
   const args = parseArgs(process.argv.slice(2));
-  const targetAgent = (args.agent || args['target'] || 'codex').toLowerCase();
-  const apiKey = args['api-key'] || args['key'] || '';
-  const baseUrl = args['base-url'] || '';
-  const model = args['model'] || '';
 
+  console.log('\n\x1b[1m\x1b[36m===============================================================\x1b[0m');
+  console.log('\x1b[1m\x1b[36m 🌐 OPENNATIVE GATEWAY — Native Language Gateway for AI Agents \x1b[0m');
+  console.log('\x1b[1m\x1b[36m===============================================================\x1b[0m');
+
+  // 1. Detect Ollama for Local Machine Translation
+  const ollamaOnline = await isOllamaRunning();
+  let mtProvider;
+  if (ollamaOnline) {
+    console.log('\x1b[32m[+] Local Ollama (Typhoon 4B) detected. MT Cost: $0.00 (Zero Token Tax Mode)\x1b[0m');
+    mtProvider = new OllamaTyphoonProvider();
+  } else {
+    console.log('\x1b[33m[!] Local Ollama not detected. Falling back to Standalone Agent Skill mode.\x1b[0m');
+    mtProvider = new MockMTProvider();
+  }
+
+  // 2. Select Agent Provider
   let agentProvider: AgentProvider;
-
-  if (targetAgent === 'claude') {
-    agentProvider = new ClaudeAPIProvider(apiKey || process.env.ANTHROPIC_API_KEY || '', model || 'claude-3-5-sonnet-20241022');
-  } else if (targetAgent === 'deepseek' || targetAgent === 'qwen' || targetAgent === 'openai') {
-    const providerName = targetAgent === 'qwen' ? 'Qwen-2.5-Coder' : 'DeepSeek-V3';
-    const defaultUrl = targetAgent === 'qwen' ? 'https://dashscope.aliyuncs.com/compatible-mode/v1' : 'https://api.deepseek.com/v1';
-    const defaultKey = targetAgent === 'qwen' ? process.env.DASHSCOPE_API_KEY : process.env.DEEPSEEK_API_KEY;
-    const defaultModel = targetAgent === 'qwen' ? 'qwen2.5-coder-7b-instruct' : 'deepseek-chat';
-
-    agentProvider = new OpenAICompatibleProvider(
-      providerName,
-      baseUrl || defaultUrl,
-      apiKey || defaultKey || '',
-      model || defaultModel
-    );
+  if (args.agent === 'claude') {
+    agentProvider = new ClaudeAPIProvider(args.apiKey, args.model);
+    console.log(`\x1b[34m[+] Connected to Agent: Anthropic Claude API (${args.model || 'claude-3-5-sonnet'})\x1b[0m`);
+  } else if (args.agent === 'deepseek' || args.agent === 'qwen') {
+    const defaultUrl = args.agent === 'deepseek' ? 'https://api.deepseek.com/v1' : 'https://dashscope.aliyuncs.com/compatible-mode/v1';
+    agentProvider = new OpenAICompatibleProvider(args.apiKey || '', args.baseUrl || defaultUrl, args.model || (args.agent === 'deepseek' ? 'deepseek-coder' : 'qwen-2.5-coder-72b'));
+    console.log(`\x1b[34m[+] Connected to Agent: ${args.agent.toUpperCase()} Provider\x1b[0m`);
   } else {
     agentProvider = new CodexAppServerProvider();
+    console.log('\x1b[34m[+] Connected to Agent: Codex App-Server (Stdio JSON-RPC)\x1b[0m');
   }
 
-  await agentProvider.connect();
-  const threadId = await agentProvider.createThread();
-
-  // Auto-detect local Ollama
-  const ollamaActive = await isOllamaRunning();
-  const mtProvider: MTProvider = ollamaActive ? new OllamaTyphoonProvider() : new MockMTProvider();
-
-  console.log('\x1b[32m%s\x1b[0m', `✔ OpenNative Gateway active with Agent: [${agentProvider.name}]`);
-  if (ollamaActive) {
-    console.log('\x1b[32m%s\x1b[0m', `✔ Local Machine Translation: [Ollama Typhoon 4B] (Local GPU/CPU)`);
-  } else {
-    console.log('\x1b[33m%s\x1b[0m', `⚡ Local Machine Translation: [Mock Fallback] (Start Ollama for real local MT)`);
-  }
-  console.log('\x1b[90m%s\x1b[0m', 'Commands: /stats (Show Savings), /clear (Reset Session), /exit (Quit)\n');
-
+  const protector = new CodeProtector();
   const benchmark = new TokenTaxBenchmark();
   const engine = new CanonicalTranscriptEngine(mtProvider);
 
-  const promptUser = () => {
-    rl.question('\x1b[1m\x1b[34m🇹🇭 You (Thai):\x1b[0m ', async (thaiInput: string) => {
-      const trimmed = thaiInput.trim();
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
 
-      if (trimmed === '/exit' || trimmed === 'exit' || trimmed === 'quit') {
-        const stats = engine.getSessionStats();
-        console.log('\n\x1b[33m%s\x1b[0m', '===============================================================');
-        console.log('\x1b[33m%s\x1b[0m', ` 📊 OPENNATIVE SESSION TOKEN SAVINGS SUMMARY`);
-        console.log(`  - Total Agent Turns:        ${stats.totalTurns}`);
-        console.log(`  - Thai Equivalent Tokens:   ${stats.originalThaiEquivalentTokens}`);
-        console.log(`  - Transmitted EN Tokens:   ${stats.transmittedEnglishTokens}`);
-        console.log(`  - Total Tokens Avoided:     \x1b[32m${stats.tokensAvoided} (${stats.percentageSaved}% saved)\x1b[0m`);
-        console.log(`  - Machine Translation Cost: \x1b[32m$0.00\x1b[0m`);
-        console.log('\x1b[33m%s\x1b[0m', '===============================================================\n');
+  const threadId = 'session-' + Date.now();
+  console.log('\x1b[90m%s\x1b[0m', '---------------------------------------------------------------');
+  console.log('Type your coding request in your native language (e.g. Thai 🇹🇭).');
+  console.log('Type "exit" or "quit" to stop.\n');
+
+  const promptUser = () => {
+    rl.question('\x1b[1m\x1b[33m🇹🇭 Native Developer Prompt > \x1b[0m', async (input) => {
+      const trimmed = input.trim();
+      if (!trimmed || trimmed.toLowerCase() === 'exit' || trimmed.toLowerCase() === 'quit') {
+        console.log('\x1b[36mGoodbye! Keep prompting natively.\x1b[0m');
         benchmark.free();
         rl.close();
         process.exit(0);
       }
 
-      if (trimmed === '/stats') {
-        console.log('\n' + engine.generateShareableStats() + '\n');
-        promptUser();
-        return;
-      }
+      console.log('\n\x1b[90m[OpenNative Engine Processing...]\x1b[0m');
+      
+      // 1. Masking
+      const { maskedText } = protector.mask(trimmed);
+      console.log(`🔒 Sentinels Protected: "${maskedText}"`);
 
-      if (trimmed === '/clear') {
-        engine.clearHistory();
-        console.log('\x1b[32m%s\x1b[0m', '✔ Session history and token stats cleared.\n');
-        promptUser();
-        return;
-      }
-
-      if (!trimmed) {
-        promptUser();
-        return;
-      }
-
-      console.log('\x1b[90m%s\x1b[0m', '⏳ Protecting code sentinels & translating via Local MT...');
-
-      // 1. Measure tokens before translation
-      const initialMetrics = benchmark.measure(trimmed);
-
-      // 2. Translate TH -> EN
-      const turnResult = await engine.processUserPrompt(
-        trimmed,
-        initialMetrics.qwenTokens,
-        0
-      );
-
+      // 2. Canonical Transcript Engine
+      const turnResult = await engine.processUserPrompt(trimmed);
+      
       const postMetrics = benchmark.compare(trimmed, turnResult.canonicalEnglish);
-      engine.updateLastTurnTokens(postMetrics.translatedEnglish.qwenTokens);
+      engine.updateLastTurnTokens(postMetrics.translatedEnglish.claudeOpus5Tokens);
 
       console.log('\n\x1b[1m\x1b[32m🇺🇸 Transmitted Canonical Prompt (EN):\x1b[0m');
       console.log(`   "${turnResult.canonicalEnglish}"`);
 
       console.log('\n\x1b[33m⚡ REAL-TIME LANGUAGE SAVINGS METER:\x1b[0m');
-      console.log(`   - DeepSeek V3/R1: ${postMetrics.originalThai.deepseekTokens} TH -> ${postMetrics.translatedEnglish.deepseekTokens} EN tokens \x1b[32m(↓${postMetrics.savings.deepseekPercent}% saved)\x1b[0m`);
-      console.log(`   - Qwen 2.5 Coder: ${postMetrics.originalThai.qwenTokens} TH -> ${postMetrics.translatedEnglish.qwenTokens} EN tokens \x1b[32m(↓${postMetrics.savings.qwenPercent}% saved)\x1b[0m`);
-      console.log(`   - GPT-4o:         ${postMetrics.originalThai.o200kTokens} TH -> ${postMetrics.translatedEnglish.o200kTokens} EN tokens \x1b[32m(↓${postMetrics.savings.o200kPercent}% saved)\x1b[0m`);
+      console.log(`   - DeepSeek V4:   ${postMetrics.originalThai.deepseekV4Tokens} TH -> ${postMetrics.translatedEnglish.deepseekV4Tokens} EN tokens \x1b[32m(↓${postMetrics.savings.deepseekV4Percent}% saved)\x1b[0m`);
+      console.log(`   - Claude Opus 5: ${postMetrics.originalThai.claudeOpus5Tokens} TH -> ${postMetrics.translatedEnglish.claudeOpus5Tokens} EN tokens \x1b[32m(↓${postMetrics.savings.claudeOpus5Percent}% saved)\x1b[0m`);
+      console.log(`   - GPT-5.6 Sol:   ${postMetrics.originalThai.gpt56SolTokens} TH -> ${postMetrics.translatedEnglish.gpt56SolTokens} EN tokens \x1b[32m(↓${postMetrics.savings.gpt56SolPercent}% saved)\x1b[0m`);
       console.log(`   - Latency:        ${turnResult.latencyMs} ms | MT Cost: \x1b[32m$0.00\x1b[0m\n`);
 
       // 3. Transmit to Agent Provider & stream response
