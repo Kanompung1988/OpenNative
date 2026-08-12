@@ -1,0 +1,22 @@
+{
+  "name": "@opennative/cli",
+  "version": "0.1.0",
+  "description": "OpenNative Interactive Terminal Gateway CLI",
+  "main": "dist/index.js",
+  "bin": {
+    "opennative": "dist/index.js"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "npx -p typescript tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@opennative/core-benchmark": "*",
+    "@opennative/core-mt": "*",
+    "@opennative/core-protector": "*",
+    "@opennative/core-providers": "*",
+    "@opennative/core-transcript": "*"
+  },
+  "license": "MIT"
+}

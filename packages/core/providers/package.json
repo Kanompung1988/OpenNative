@@ -1,0 +1,16 @@
+{
+  "name": "@opennative/core-providers",
+  "version": "0.1.0",
+  "description": "Agent Providers Abstraction (Codex App-Server JSON-RPC & Claude API) for OpenNative",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "npx -p typescript tsc"
+  },
+  "dependencies": {
+    "@opennative/core-protector": "*",
+    "@opennative/core-transcript": "*"
+  },
+  "license": "MIT"
+}

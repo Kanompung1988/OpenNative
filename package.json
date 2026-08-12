@@ -1,0 +1,30 @@
+{
+  "name": "open-native-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OpenNative — Open-source native-language layer for AI coding agents",
+  "workspaces": [
+    "packages/core/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run --workspaces build",
+    "test": "node --test packages/core/*/test/*.test.js",
+    "benchmark": "node packages/core/benchmark/dist/run-benchmark.js"
+  },
+  "keywords": [
+    "ai-agent",
+    "translation",
+    "token-arbitrage",
+    "code-aware",
+    "deepseek",
+    "qwen",
+    "claude",
+    "codex"
+  ],
+  "author": "OpenNative Team",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

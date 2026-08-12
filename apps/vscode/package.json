@@ -1,0 +1,61 @@
+{
+  "name": "opennative-vscode",
+  "displayName": "OpenNative AI Sidecar",
+  "description": "Open-source native-language sidecar layer for AI Coding Agents (Codex / Claude / DeepSeek)",
+  "version": "0.1.0",
+  "publisher": "OpenNative",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "AI",
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "commands": [
+      {
+        "command": "opennative.askAgent",
+        "title": "OpenNative: Ask Agent in Thai (Alt+T / Ctrl+Shift+L)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "opennative.askAgent",
+        "key": "ctrl+shift+l",
+        "mac": "cmd+shift+l",
+        "when": "editorTextFocus"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "opennative-sidebar-container",
+          "title": "OpenNative",
+          "icon": "$(globe)"
+        }
+      ]
+    },
+    "views": {
+      "opennative-sidebar-container": [
+        {
+          "id": "opennative-sidebar-view",
+          "name": "Language Gateway & Savings Meter",
+          "type": "webview"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "npx -p typescript tsc"
+  },
+  "dependencies": {
+    "@opennative/core-benchmark": "*",
+    "@opennative/core-mt": "*",
+    "@opennative/core-protector": "*",
+    "@opennative/core-providers": "*",
+    "@opennative/core-transcript": "*"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,16 @@
+{
+  "name": "@opennative/core-transcript",
+  "version": "0.1.0",
+  "description": "Canonical English State Engine for OpenNative",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "npx -p typescript tsc"
+  },
+  "dependencies": {
+    "@opennative/core-mt": "*",
+    "@opennative/core-protector": "*"
+  },
+  "license": "MIT"
+}

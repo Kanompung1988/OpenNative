@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist",
+    "paths": {
+      "@opennative/core-protector": ["./packages/core/protector/src/index.ts"],
+      "@opennative/core-benchmark": ["./packages/core/benchmark/src/index.ts"],
+      "@opennative/core-mt": ["./packages/core/mt/src/index.ts"],
+      "@opennative/core-transcript": ["./packages/core/transcript/src/index.ts"],
+      "@opennative/core-providers": ["./packages/core/providers/src/index.ts"]
+    }
+  }
+}

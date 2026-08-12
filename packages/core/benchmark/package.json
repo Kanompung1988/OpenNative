@@ -1,0 +1,17 @@
+{
+  "name": "@opennative/core-benchmark",
+  "version": "0.1.0",
+  "description": "Multi-tokenizer benchmark and Token Tax meter for OpenNative",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "npx -p typescript tsc",
+    "benchmark": "node dist/run-benchmark.js"
+  },
+  "dependencies": {
+    "@opennative/core-protector": "*",
+    "tiktoken": "^1.0.18"
+  },
+  "license": "MIT"
+}
