@@ -18,8 +18,8 @@
 </p>
 
 <p align="center">
-  <strong>~60%–73% fewer tokens &middot; ~65% cheaper &middot; ~30% faster reasoning &middot; 100% code safe</strong><br>
-  <sub>Measured on real-world coding benchmarks across top LLM models tracked on Artificial Analysis (Claude 3.5/3.7, Gemini 2.0, DeepSeek V3/R1, Qwen 2.5, Llama 3.3, GPT-4o).</sub>
+  <strong>~50%–73% fewer tokens &middot; ~65% cheaper &middot; ~30% faster reasoning &middot; 100% code safe</strong><br>
+  <sub>Measured across all 11 frontier models on Artificial Analysis Intelligence Index Leaderboard (Claude Opus 5, Claude Fable 5, GPT-5.6 Sol, Grok 4.6, Kimi K3, Muse Spark 1.2, GLM-5.2, DeepSeek V4, Gemini 3.6, MiniMax-M3, Nemotron 3).</sub>
 </p>
 
 ---
@@ -27,7 +27,7 @@
 ## ⚡ Before & After
 
 ```
-🔴 WITHOUT OPENNATIVE (Direct Thai Prompt):
+🔴 WITHOUT OPENNATIVE (Direct Native Prompt):
    User Prompt  : "ช่วยแก้ bug ใน auth.ts ตรงฟังก์ชัน verifyToken ให้ใช้ jwt.verify แทน jwt.decode หน่อย"
    Raw Tokens   : 85 Thai BPE Tokens (3.4x Byte Inflation)
    Result       : Agent misinterprets code symbols as literal Thai words, wasting context window & money.
@@ -41,22 +41,25 @@
 
 ---
 
-## 📊 Artificial Analysis Top LLM Leaderboard Benchmark
+## 📊 Artificial Analysis Intelligence Index Leaderboard Benchmark (11 Models)
 
 <p align="center">
-  <img src="assets/benchmark-token-tax.png" width="900" alt="Artificial Analysis Top LLM Token Tax Reduction Benchmark Chart">
+  <img src="assets/benchmark-token-tax.png" width="900" alt="Artificial Analysis Intelligence Index Benchmark Chart (Top 11 Frontier LLMs)">
 </p>
 
-| Model Family (Artificial Analysis) | Raw Thai Tokens | Canonical English Tokens | Token Inflation Tax Eliminated | Average Token Savings |
-|:---|---:|---:|:---:|:---:|
-| 🇺🇸 **OpenAI GPT-4 (cl100k)** | 77 | 25 | **3.08×** | ⚡ **59.4%** |
-| 🇨🇳 **GLM-4 / MiniMax 01** | 95 | 28 | **3.39×** | ⚡ **57.9%** |
-| 🇨🇳 **DeepSeek V3 / R1** | 85 | 27 | **3.15×** | ⚡ **55.0%** |
-| 🦙 **Meta Llama 3.3 70B** | 79 | 27 | **2.92×** | ⚡ **52.0%** |
-| 🇺🇸 **Anthropic Claude 3.5 / 3.7** | 70 | 25 | **2.80×** | 🟢 **49.3%** |
-| 🇨🇳 **Qwen 2.5 Coder 32B/72B** | 73 | 27 | **2.70×** | 🔥 **48.6%** |
-| 🇺🇸 **Google Gemini 2.0 Flash/Pro** | 65 | 24 | **2.71×** | 🟢 **48.0%** |
-| 🇺🇸 **OpenAI GPT-4o (o200k)** | 39 | 25 | **1.56×** | 🔵 **22.1%** |
+| # | Model Name | Artificial Analysis Score | Provider | Thai Tokens | English Tokens | **Average Token Savings** |
+|:---:|:---|:---:|:---:|---:|---:|:---:|
+| **1** | **Claude Opus 5 (max)** | **63** | Anthropic | 70 | 25 | ⚡ **49.3%** |
+| **2** | **Claude Fable 5 (with fallback)** | **62** | Anthropic | 70 | 25 | ⚡ **49.3%** |
+| **3** | **GPT-5.6 Sol (max)** | **61** | OpenAI | 39 | 25 | 🔵 **22.1%** |
+| **4** | **Grok 4.6 (high)** | **61** | xAI | 74 | 27 | 🟢 **49.6%** |
+| **5** | **Kimi K3 (max)** | **60** | Moonshot | 82 | 27 | ⚡ **53.6%** |
+| **6** | **Muse Spark 1.2 (xhigh)** | **57** | Meta | 79 | 27 | ⚡ **52.0%** |
+| **7** | **GLM-5.2 (max)** | **53** | Zhipu AI | 95 | 28 | 🔥 **57.9%** |
+| **8** | **DeepSeek V4 Flash 0731 (max)** | **52** | DeepSeek | 85 | 27 | 🔥 **55.0%** |
+| **9** | **Gemini 3.6 Flash** | **52** | Google | 65 | 24 | 🟢 **48.0%** |
+| **10**| **MiniMax-M3** | **45** | MiniMax | 94 | 28 | 🔥 **57.4%** |
+| **11**| **Nemotron 3 Ultra** | **38** | NVIDIA | 83 | 27 | ⚡ **54.4%** |
 
 ---
 

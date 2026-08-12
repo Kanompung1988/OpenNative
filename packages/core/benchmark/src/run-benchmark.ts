@@ -26,13 +26,14 @@ const DATASET = [
 
 function run() {
   console.log('================================================================================');
-  console.log(' 🚀 OPENNATIVE MULTI-TOKENIZER BENCHMARK (Artificial Analysis Top Models Suite)');
+  console.log(' 🚀 OPENNATIVE BENCHMARK — Artificial Analysis Intelligence Index (Top 11 Models)');
   console.log('================================================================================\n');
 
   const benchmark = new TokenTaxBenchmark();
   const protector = new CodeProtector();
 
-  let sumO200k = 0, sumCl100k = 0, sumQwen = 0, sumDeepSeek = 0, sumLlama = 0, sumClaude = 0, sumGemini = 0, sumGlm = 0;
+  let sumClaudeOpus5 = 0, sumClaudeFable5 = 0, sumGpt56Sol = 0, sumGrok46 = 0, sumKimiK3 = 0;
+  let sumMuseSpark = 0, sumGlm52 = 0, sumDeepseekV4 = 0, sumGemini36 = 0, sumMinimaxM3 = 0, sumNemotron3 = 0;
 
   DATASET.forEach((item, index) => {
     const { maskedText } = protector.mask(item.th);
@@ -44,38 +45,47 @@ function run() {
     console.log(`🔒 Masked: "${maskedText}"`);
     console.log('--------------------------------------------------------------------------------');
     console.log(` Token Count (TH vs EN):`);
-    console.log(`  - Anthropic Claude 3.5 / 3.7: ${result.originalThai.claudeTokens} -> ${result.translatedEnglish.claudeTokens} tokens (${result.savings.claudePercent}% saved)`);
-    console.log(`  - Google Gemini 2.0 Flash/Pro: ${result.originalThai.geminiTokens} -> ${result.translatedEnglish.geminiTokens} tokens (${result.savings.geminiPercent}% saved)`);
-    console.log(`  - DeepSeek V3 / R1:            ${result.originalThai.deepseekTokens} -> ${result.translatedEnglish.deepseekTokens} tokens (${result.savings.deepseekPercent}% saved)`);
-    console.log(`  - Qwen 2.5 Coder 32B/72B:      ${result.originalThai.qwenTokens} -> ${result.translatedEnglish.qwenTokens} tokens (${result.savings.qwenPercent}% saved)`);
-    console.log(`  - Meta Llama 3.3 70B:          ${result.originalThai.llamaTokens} -> ${result.translatedEnglish.llamaTokens} tokens (${result.savings.llamaPercent}% saved)`);
-    console.log(`  - GLM-4 / MiniMax 01:           ${result.originalThai.glmTokens} -> ${result.translatedEnglish.glmTokens} tokens (${result.savings.glmPercent}% saved)`);
-    console.log(`  - OpenAI GPT-4o (o200k_base):  ${result.originalThai.o200kTokens} -> ${result.translatedEnglish.o200kTokens} tokens (${result.savings.o200kPercent}% saved)`);
-    console.log(`  - OpenAI GPT-4 (cl100k_base):  ${result.originalThai.cl100kTokens} -> ${result.translatedEnglish.cl100kTokens} tokens (${result.savings.cl100kPercent}% saved)`);
+    console.log(`  1. Claude Opus 5 (max) [Score: 63]:         ${result.originalThai.claudeOpus5Tokens} -> ${result.translatedEnglish.claudeOpus5Tokens} tokens (${result.savings.claudeOpus5Percent}% saved)`);
+    console.log(`  2. Claude Fable 5 (with fallback) [62]:      ${result.originalThai.claudeFable5Tokens} -> ${result.translatedEnglish.claudeFable5Tokens} tokens (${result.savings.claudeFable5Percent}% saved)`);
+    console.log(`  3. GPT-5.6 Sol (max) [Score: 61]:           ${result.originalThai.gpt56SolTokens} -> ${result.translatedEnglish.gpt56SolTokens} tokens (${result.savings.gpt56SolPercent}% saved)`);
+    console.log(`  4. Grok 4.6 (high) [Score: 61]:             ${result.originalThai.grok46Tokens} -> ${result.translatedEnglish.grok46Tokens} tokens (${result.savings.grok46Percent}% saved)`);
+    console.log(`  5. Kimi K3 (max) [Score: 60]:               ${result.originalThai.kimiK3Tokens} -> ${result.translatedEnglish.kimiK3Tokens} tokens (${result.savings.kimiK3Percent}% saved)`);
+    console.log(`  6. Muse Spark 1.2 (xhigh) [Score: 57]:      ${result.originalThai.museSparkTokens} -> ${result.translatedEnglish.museSparkTokens} tokens (${result.savings.museSparkPercent}% saved)`);
+    console.log(`  7. GLM-5.2 (max) [Score: 53]:               ${result.originalThai.glm52Tokens} -> ${result.translatedEnglish.glm52Tokens} tokens (${result.savings.glm52Percent}% saved)`);
+    console.log(`  8. DeepSeek V4 Flash 0731 (max) [52]:       ${result.originalThai.deepseekV4Tokens} -> ${result.translatedEnglish.deepseekV4Tokens} tokens (${result.savings.deepseekV4Percent}% saved)`);
+    console.log(`  9. Gemini 3.6 Flash [Score: 52]:            ${result.originalThai.gemini36Tokens} -> ${result.translatedEnglish.gemini36Tokens} tokens (${result.savings.gemini36Percent}% saved)`);
+    console.log(` 10. MiniMax-M3 [Score: 45]:                  ${result.originalThai.minimaxM3Tokens} -> ${result.translatedEnglish.minimaxM3Tokens} tokens (${result.savings.minimaxM3Percent}% saved)`);
+    console.log(` 11. Nemotron 3 Ultra [Score: 38]:            ${result.originalThai.nemotron3Tokens} -> ${result.translatedEnglish.nemotron3Tokens} tokens (${result.savings.nemotron3Percent}% saved)`);
     console.log('\n');
 
-    sumClaude += result.savings.claudePercent;
-    sumGemini += result.savings.geminiPercent;
-    sumDeepSeek += result.savings.deepseekPercent;
-    sumQwen += result.savings.qwenPercent;
-    sumLlama += result.savings.llamaPercent;
-    sumGlm += result.savings.glmPercent;
-    sumO200k += result.savings.o200kPercent;
-    sumCl100k += result.savings.cl100kPercent;
+    sumClaudeOpus5 += result.savings.claudeOpus5Percent;
+    sumClaudeFable5 += result.savings.claudeFable5Percent;
+    sumGpt56Sol += result.savings.gpt56SolPercent;
+    sumGrok46 += result.savings.grok46Percent;
+    sumKimiK3 += result.savings.kimiK3Percent;
+    sumMuseSpark += result.savings.museSparkPercent;
+    sumGlm52 += result.savings.glm52Percent;
+    sumDeepseekV4 += result.savings.deepseekV4Percent;
+    sumGemini36 += result.savings.gemini36Percent;
+    sumMinimaxM3 += result.savings.minimaxM3Percent;
+    sumNemotron3 += result.savings.nemotron3Percent;
   });
 
   const count = DATASET.length;
   console.log('================================================================================');
-  console.log(' 📊 AVERAGE TOKEN SAVINGS SUMMARY (Artificial Analysis Top Models)');
+  console.log(' 📊 AVERAGE TOKEN SAVINGS SUMMARY (Artificial Analysis Top 11 Models)');
   console.log('================================================================================');
-  console.log(` 🔹 Anthropic Claude 3.5 / 3.7: ${(sumClaude / count).toFixed(1)}% Token Savings`);
-  console.log(` 🔹 Google Gemini 2.0 Flash/Pro: ${(sumGemini / count).toFixed(1)}% Token Savings`);
-  console.log(` 🔹 DeepSeek V3 / R1:            ${(sumDeepSeek / count).toFixed(1)}% Token Savings`);
-  console.log(` 🔹 Qwen 2.5 Coder 32B / 72B:    ${(sumQwen / count).toFixed(1)}% Token Savings`);
-  console.log(` 🔹 Meta Llama 3.3 70B:          ${(sumLlama / count).toFixed(1)}% Token Savings`);
-  console.log(` 🔹 GLM-4 / MiniMax 01:          ${(sumGlm / count).toFixed(1)}% Token Savings`);
-  console.log(` 🔹 OpenAI GPT-4o (o200k_base):  ${(sumO200k / count).toFixed(1)}% Token Savings`);
-  console.log(` 🔹 OpenAI GPT-4 (cl100k_base):  ${(sumCl100k / count).toFixed(1)}% Token Savings`);
+  console.log(` 🔹 1. Claude Opus 5 (max) [Score: 63]:         ${(sumClaudeOpus5 / count).toFixed(1)}% Token Savings`);
+  console.log(` 🔹 2. Claude Fable 5 (with fallback) [62]:      ${(sumClaudeFable5 / count).toFixed(1)}% Token Savings`);
+  console.log(` 🔹 3. GPT-5.6 Sol (max) [Score: 61]:           ${(sumGpt56Sol / count).toFixed(1)}% Token Savings`);
+  console.log(` 🔹 4. Grok 4.6 (high) [Score: 61]:             ${(sumGrok46 / count).toFixed(1)}% Token Savings`);
+  console.log(` 🔹 5. Kimi K3 (max) [Score: 60]:               ${(sumKimiK3 / count).toFixed(1)}% Token Savings`);
+  console.log(` 🔹 6. Muse Spark 1.2 (xhigh) [Score: 57]:      ${(sumMuseSpark / count).toFixed(1)}% Token Savings`);
+  console.log(` 🔹 7. GLM-5.2 (max) [Score: 53]:               ${(sumGlm52 / count).toFixed(1)}% Token Savings`);
+  console.log(` 🔹 8. DeepSeek V4 Flash 0731 (max) [52]:       ${(sumDeepseekV4 / count).toFixed(1)}% Token Savings`);
+  console.log(` 🔹 9. Gemini 3.6 Flash [Score: 52]:            ${(sumGemini36 / count).toFixed(1)}% Token Savings`);
+  console.log(` 🔹 10. MiniMax-M3 [Score: 45]:                 ${(sumMinimaxM3 / count).toFixed(1)}% Token Savings`);
+  console.log(` 🔹 11. Nemotron 3 Ultra [Score: 38]:           ${(sumNemotron3 / count).toFixed(1)}% Token Savings`);
   console.log('================================================================================\n');
 
   benchmark.free();
