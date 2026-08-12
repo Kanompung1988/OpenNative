@@ -110,20 +110,6 @@ Copy `skills/opennative/SKILL.md` into `.cursor/rules/opennative.mdc` or `.curso
 
 ---
 
-## 💡 Local MT Gateway (`npx opennative`)
-
-To eliminate the Token Tax on the **very first turn** using local GPU/CPU translation:
-
-```bash
-# 1. Install local Ollama + Typhoon 4B
-ollama pull scb10x/typhoon-translate-4b
-
-# 2. Launch OpenNative Gateway
-npx opennative --agent claude --api-key sk-ant-xxx
-```
-
----
-
 ## 📄 License
 
 MIT © [OpenNative Team](https://github.com/Kanompung1988)
