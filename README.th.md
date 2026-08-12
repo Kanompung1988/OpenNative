@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <em>พิมไทยสบายใจ · ประหยัด Token ภาษาอังกฤษ · ค่าแปล 0 บาท</em>
+  <em>พิมพ์ไทยสบายใจ · ประหยัด Token ภาษาอังกฤษ · ค่าแปล 0 บาท</em>
 </p>
 
 <p align="center">
@@ -21,25 +21,25 @@
 
 ## 🧠 ปัญหา Token Tax คืออะไร?
 
-นักพัฒนาที่ไม่ได้ใช้ภาษาอังกฤษเป็นภาษาหลัก (เช่น ภาษาไทย 🇹🇭) เมื่อพิมพ์โจทย์หา AI Coding Agents (Claude Code, Cursor, Codex) จะต้องจ่าย **"ภาษีภาษา" (Token Tax)** โดยไม่รู้ตัว:
+นักพัฒนาที่พิมพ์คำสั่งภาษาไทยใส่ AI Coding Agents (Claude Code, Cursor, Codex) จะต้องเสีย **"ภาษีภาษา" (Token Tax)** โดยไม่รู้ตัว:
 
-| ปัญหา | ผลกระทบ |
+| ปัญหาหลัก | ผลกระทบต่อการทำงาน |
 |:---|:---|
-| 🔴 **Token แพงกว่าปกติ** | ภาษาไทยใช้ Token **มากกว่าภาษาอังกฤษ 2.5× ถึง 3.7× เท่า** บน Tokenizer ส่วนใหญ่ |
-| 🔴 **AI คิดช้าและฉลาดน้อยลง** | โมเดลคิดคำตอบผิดพลาดมากขึ้น **+4.5% ถึง +9.9%** เมื่อได้รับ Prompt ภาษาที่ไม่ใช่ภาษาอังกฤษ |
-| 🔴 **เปลือง Context Window** | ตัวอักษรไทยกินพื้นที่ความจำของ AI ทำให้คุยงานยาวๆ ไม่ได้ |
+| 🔴 **Token แพงกว่าปกติ** | ภาษาไทยใช้ Token **แพงกว่าภาษาอังกฤษ 2.5× ถึง 3.7× เท่า** |
+| 🔴 **AI คิดช้าและฉลาดน้อยลง** | โมเดลคิดคำตอบผิดพลาดมากขึ้น **+4.5% ถึง +9.9%** เมื่อรับ Prompt ภาษาที่ไม่ใช่ภาษาอังกฤษ |
+| 🔴 **เปลือง Context Window** | ตัวอักษรไทยกินพื้นที่ความจำของ AI ทำให้สั่งงานโปรเจกต์ยาวๆ ไม่ได้ |
 
 **OpenNative** เกิดมาเพื่อลบภาษีนี้ทิ้ง 100% โดยการดักแปลงคำสั่งภาษาไทยของคุณเป็น **Canonical English** ในระบบประมวลผลของ AI!
 
 ---
 
-## 📊 ตารางสถิติเปรียบเทียบโมเดลชั้นนำบน Artificial Analysis Leaderboard
+## 📊 ตารางสถิติเปรียบเทียบโมเดลระดับโลก (Artificial Analysis Leaderboard)
 
 <p align="center">
-  <img src="assets/benchmark-token-tax.png" width="860" alt="Artificial Analysis Top LLM Token Tax Reduction Benchmark Chart">
+  <img src="assets/benchmark-token-tax.png" width="900" alt="Artificial Analysis Top LLM Token Tax Reduction Benchmark Chart">
 </p>
 
-| โมเดลระดับโลก (Artificial Analysis) | Token ภาษาไทย | Token อังกฤษ | Tax Ratio ที่กำจัดได้ | **เปอร์เซ็นต์ประหยัด** |
+| โมเดลระดับโลก (Artificial Analysis) | Token ภาษาไทย | Token อังกฤษ | Tax Ratio ที่กำจัดได้ | **เปอร์เซ็นต์ประหยัดเฉลี่ย** |
 |:---|---:|---:|:---:|:---:|
 | 🇺🇸 **OpenAI GPT-4 (cl100k)** | 77 | 25 | **3.08×** | ⚡ **59.4%** |
 | 🇨🇳 **GLM-4 / MiniMax 01** | 95 | 28 | **3.39×** | ⚡ **57.9%** |
@@ -56,7 +56,7 @@
 
 ถอดแบบความง่ายจาก `ponytail` ติดตั้งได้ใน **10 วินาที ไม่ต้องลงโปรแกรมเพิ่ม**:
 
-### สำหรับ Claude Code:
+### 1. สำหรับ Claude Code (ระดับโปรเจกต์):
 ก๊อปปี้โฟลเดอร์ `skills/opennative` ไปไว้ในโฟลเดอร์โปรเจกต์ของคุณ:
 
 ```bash
@@ -64,13 +64,13 @@ mkdir -p .claude/skills
 cp -r skills/opennative .claude/skills/
 ```
 
-### สำหรับ Claude Code แบบใช้งานทุกโปรเจกต์ (Global):
+### 2. สำหรับ Claude Code แบบใช้งานทุกโปรเจกต์ (Global):
 ```bash
 mkdir -p ~/.claude/skills
 cp -r skills/opennative ~/.claude/skills/
 ```
 
-### สำหรับ Cursor / Windsurf / Copilot CLI:
+### 3. สำหรับ Cursor / Windsurf / Copilot CLI:
 ก๊อปปี้เนื้อหาใน `skills/opennative/SKILL.md` ไปวางในไฟล์ `.cursor/rules/opennative.mdc` หรือ `.cursorrules` ได้เลย!
 
 ---
