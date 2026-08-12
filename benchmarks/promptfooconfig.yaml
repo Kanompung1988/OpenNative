@@ -1,0 +1,17 @@
+description: "OpenNative Token Tax Benchmark Suite"
+
+providers:
+  - id: "openai:gpt-4o"
+  - id: "openai:gpt-4"
+  - id: "ollama:qwen2.5-coder:7b"
+  - id: "ollama:deepseek-v3"
+  - id: "ollama:llama3.3:70b"
+
+prompts:
+  - "ช่วย refactor ฟังก์ชัน handleSubmit ใน LoginForm.tsx ให้ใช้ react-hook-form แทน useState"
+  - "ช่วยเพิ่ม error handling ใน authService.ts และใช้ try-catch ครอบ async function"
+  - "ช่วยเขียน unit test สำหรับ UserService.createUser โดยใช้ Jest และ mock PrismaClient"
+
+assert:
+  - type: latency
+    threshold: 5000

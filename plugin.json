@@ -1,0 +1,14 @@
+{
+  "name": "opennative",
+  "version": "0.1.0",
+  "description": "OpenNative — Open-source native-language layer & skill for AI coding agents",
+  "author": "OpenNative Team",
+  "license": "MIT",
+  "homepage": "https://github.com/Kanompung1988/OpenNative",
+  "skills": [
+    "skills/opennative"
+  ],
+  "hooks": {
+    "session_start": "node hooks/opennative-hook.js"
+  }
+}
