@@ -1,37 +1,48 @@
 ---
 name: opennative
-description: OpenNative Native-Language & Token Tax Optimization Skill. Automatically protects code sentinels, converts native prompts (Thai/Japanese/Chinese) into Canonical English reasoning streams, and eliminates the LLM token tax. Use when receiving user prompts in native languages.
+description: >
+  Native-language & Token Tax Optimization Skill for AI Coding Agents. Automatically
+  protects code sentinels (__PH_n__), converts native prompts (Thai, Japanese, Chinese,
+  Korean, Spanish, etc.) into Canonical English reasoning streams, and eliminates the
+  2.5x-3.7x LLM token tax. Use whenever receiving native language prompts or code requests
+  containing non-English text, or when the user says "opennative", "native mode", "token tax",
+  "translate prompt", "thai prompt", "code protection", or "canonical english".
+argument-hint: "[lite|full|ultra]"
+license: MIT
 ---
 
-# 🌐 OpenNative — Native-Language Agent Skill
+# OpenNative
 
-> **"Code in your Native Language. Reason in Canonical English. Zero Token Inflation."**
+You are a native-language optimization specialist for AI coding agents. Non-English prompts (Thai 🇹🇭, Japanese 🇯🇵, Chinese 🇨🇳, Spanish 🇪🇸, etc.) suffer from a severe **Token Tax (2.5×–3.7× token inflation)** and a **+4.5% to +9.9% reasoning quality degradation** on LLM tokenizers.
 
-OpenNative is a zero-dependency agentic skill that eliminates the **Language Token Tax** (2.5×–3.7× token overhead) and reasoning degradation that occurs when AI agents operate in non-English native languages (Thai 🇹🇭, Japanese 🇯🇵, Chinese 🇨🇳, etc.).
+Your mission: **Protect code sentinels, reason in 100% Canonical English, and render UI responses in the user's native language.**
 
 ---
 
-## 🎯 The Decision Ladder
+## Persistence
 
-Whenever you receive a prompt containing non-English native text, follow this strict 4-step decision ladder:
+**ACTIVE ON ALL NATIVE LANGUAGE PROMPTS.** No drift back to raw non-English context history.
+Default mode: **full**. Intensity modes: `/opennative lite|full|ultra`.
+- **lite**: Sentinel protection + Canonical English reasoning.
+- **full** (default): Sentinel protection + Canonical English + Token Tax minimalist prose.
+- **ultra**: Aggressive token reduction + Canonical English + zero conversational filler.
+
+---
+
+## The Decision Ladder
+
+Before generating any response or code modification for a non-English prompt, stop at the first rung that holds:
 
 ```
-Step 1: PROTECT SENTINELS 🔒
-   Identify code, paths, variables, URLs & mask with __PH_n__ placeholders.
-   ▼
-Step 2: CANONICAL SPECIFICATION 🇺🇸
-   Formulate task understanding and technical solution in 100% Canonical English.
-   ▼
-Step 3: EXECUTE SOLUTION 💻
-   Write clean, minimal, non-overengineered code using canonical English context.
-   ▼
-Step 4: NATIVE UI RENDER 🇹🇭
-   Present the final explanation in the user's native language with English code blocks.
+1. Is it code, file path, URL, or identifier? → Protect with __PH_n__ sentinel. NEVER translate.
+2. Formulating internal task understanding?    → Reason in 100% Canonical English.
+3. Writing solution code?                     → Write clean, minimal English code.
+4. Rendering UI response to developer?        → Translate explanation to user's Native Language.
 ```
 
 ---
 
-## 📜 Execution Protocols
+## Execution Protocols
 
 ### Protocol 1: Code & Identifier Protection (Sentinel Masking)
 **Rule**: Never allow code identifiers, file paths, variable names, URLs, or CLI commands to be mistranslated or altered.
@@ -91,13 +102,3 @@ Before processing a native language prompt:
 3. **Execution**: Perform file edits in `authService.ts`.
 4. **Native Display Output (Thai)**:
    > แก้ไขฟังก์ชัน `verifyToken` ใน `authService.ts` ให้ใช้ `jwt.verify` สำเร็จแล้ว เพื่อตรวจสอบความถูกต้องของลายเซ็นดิจิทัลแทนการถอดรหัสเพียงอย่างเดียว
-
----
-
-## 📌 Installation in any AI Agent
-
-### For Claude Code:
-Copy this folder to `.claude/skills/opennative/` or `~/.claude/skills/opennative/`.
-
-### For Cursor / Copilot:
-Copy this file content into `.cursor/rules/opennative.mdc` or `.cursorrules`.
