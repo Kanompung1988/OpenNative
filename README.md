@@ -42,26 +42,16 @@ Your agent receives **85 raw Thai tokens**, suffers byte-pair encoding inflation
 
 ## 📊 Numbers & Token Tax Benchmark
 
-Empirical measurement comparing non-English prompts vs. OpenNative Canonical English streams across major LLM tokenizers:
-
-```
-─────────────────────────────────────────────────────────────────────────────
- Token Inflation Elimination across Tokenizers (Thai vs. Canonical EN)
-─────────────────────────────────────────────────────────────────────────────
- 🇨🇳 GLM-4 / MiniMax    ████████████████████████████ 73.3% Saved (-66 tokens)
- 🇨🇳 DeepSeek V3 / R1   ██████████████████████████   70.5% Saved (-60 tokens)
- 🦙 Meta Llama 3.3      ███████████████████████     67.9% Saved (-53 tokens)
- 🇨🇳 Qwen 2.5 Coder     ███████████████████         60.5% Saved (-23 tokens)
- 🇺🇸 GPT-4 (cl100k)     ███████████████             48.7% Saved (-19 tokens)
- 🇺🇸 GPT-4o (o200k)     █████                       14.8% Saved (-4 tokens)
-─────────────────────────────────────────────────────────────────────────────
-```
+<p align="center">
+  <img src="assets/benchmark-token-tax.png" width="860" alt="Matplotlib Token Tax Reduction Benchmark Chart across Models">
+</p>
 
 | vs Bare Prompt Baseline | Thai Tokens | English Tokens | Tax Ratio Eliminated | Token Savings | Cost Cut |
 |:---|---:|---:|:---:|:---:|:---:|
+| **GLM-4 / MiniMax** | 90 | 24 | **3.75×** | **-73.3%** | **-73%** |
 | **DeepSeek V3 / R1** | 85 | 25 | **3.40×** | **-70.5%** | **-70%** |
-| **Qwen 2.5 Coder** | 38 | 15 | **2.53×** | **-60.5%** | **-60%** |
 | **Meta Llama 3.3** | 78 | 25 | **3.12×** | **-67.9%** | **-68%** |
+| **Qwen 2.5 Coder** | 38 | 15 | **2.53×** | **-60.5%** | **-60%** |
 | **GPT-4 (cl100k)** | 39 | 20 | **1.95×** | **-48.7%** | **-49%** |
 | **GPT-4o (o200k)** | 27 | 23 | **1.17×** | **-14.8%** | **-15%** |
 
